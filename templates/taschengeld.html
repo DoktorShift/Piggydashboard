@@ -1,1 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Sparschwein</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Externe CSS-Datei -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Kopfbereich -->
+        <div class="header">
+            <h1>Sparschwein</h1>
+            <h5>Sei schlau und spare deine Bitcoin!</h5>
+            <!-- Info-Symbol mit Hinweis -->
+            <div class="info-tooltip">
+                <i class="material-icons info-icon">currency_bitcoin</i>
+                <span class="tooltip-text">Lerne mehr über Bitcoin</span>
+                <a href="{{ information_url }}" target="_blank" class="info-link" aria-label="Mehr über das Sparen lernen!"></a>
+            </div>
+        </div>
+
+        <!-- Info-Bereich -->
+        <div class="info-section">
+            <!-- Münzglas und Sparcontainer -->
+            <div class="info-container">
+                <!-- Münzglas-Karte -->
+                <div class="card qr-card">
+                    <h5>Werfe digitale Münzen in dein Sparglas</h5>
+                    <!-- Bild vom Münzglas, auf das man klicken kann, um zu sparen -->
+                    <img src="data:image/png;base64,{{ qr_code_data }}" alt="Sparglas" data-lnurl="{{ lnurl }}" onclick="copyLnurl(this)" title="Klicke, um Münzen hinzuzufügen">
+                </div>
+
+                <!-- Sparkonto-Karte -->
+                <div class="card lightning-card">
+                    <div class="copy-field" onclick="copyText(this)" title="Klicke, um dein Sparkonto zu kopieren" data-address="{{ lightning_address }}" id="lightning-address-container">
+                        <span class="emoji">⚡️</span>
+                        <span class="address" id="lightning-address">{{ lightning_address }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sparbox -->
+            <div class="donations-box">
+                <h2>Gesamt gespart</h2>
+                <div class="donation-amount" id="totalDonations">0 Sats</div>
+                <!-- Logo-Integration -->
+                <img src="https://www.lightningpiggy.com/content/images/2024/01/BY_-_Lightning_Piggy_character.svg" alt="Lightning Sparschwein Logo" class="logo">
+                <div class="donation-history" id="donationHistory">Letztes Sparen: Noch nichts.</div>
+            </div>
+        </div>
+
+        <!-- Tabelle mit Sparbeträgen -->
+        <div class="transactions">
+            <h2>Meine Ersparnisse</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Datum</th>
+                        <th style="width: 60%;">Beschreibung</th>
+                        <th style="width: 20%;">Betrag</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions">
+                    <tr>
+                        <td colspan="3" class="no-data">Noch keine Ersparnisse.</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- Benachrichtigungen -->
+    <div id="toast-container"></div>
+
+    <!-- Externe JS-Datei -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
 
