@@ -159,6 +159,18 @@ def load_last_balance():
         logger.debug(traceback.format_exc())
         return 0.0
 
+def save_current_balance(balance):
+    """
+    Save the current balance to the balance file.
+    """
+    try:
+        with open(CURRENT_BALANCE_FILE, 'w') as f:
+            f.write(f"{balance}\n")
+        logger.debug(f"Current balance {balance} sats saved successfully.")
+    except Exception as e:
+        logger.error(f"Failed to save current balance: {e}")
+        logger.debug(traceback.format_exc())
+
 def load_donations():
     """
     Load donations from the donations file into the donations list and set total_donations.
@@ -494,11 +506,10 @@ def send_latest_payments():
 
     full_message = "\n".join(message_lines)
 
-    # Define the inline keyboard with available buttons (Overwatch entfernt)
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 View PiggyBank", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 View Transactions", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     # Send the message to Telegram with the inline keyboard
@@ -551,11 +562,10 @@ def check_balance_change():
         f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
-    # Define the inline keyboard with available buttons (Overwatch entfernt)
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 View PiggyBank", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 View Transactions", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     # Send message to Telegram with the inline keyboard
@@ -602,18 +612,17 @@ def send_wallet_balance():
 
     # Prepare the Telegram message with markdown formatting
     message = (
-        f"📊 *{INSTANCE_NAME}* - *Daily Wallet Balance* 📊\n\n"
-        f"🔹 *Current Balance:* `{int(current_balance_sats)} sats`\n"
-        f"🔹 *Total Incoming:* `{int(incoming_total)} sats` across `{incoming_count}` transactions\n"
-        f"🔹 *Total Outgoing:* `{int(outgoing_total)} sats` across `{outgoing_count}` transactions\n\n"
+        f"📊 *{INSTANCE_NAME}* - *Tägliche Wallet-Bilanz* 📊\n\n"
+        f"🔹 *Aktuelles Guthaben:* `{int(current_balance_sats)} sats`\n"
+        f"🔹 *Gesamteinnahmen:* `{int(incoming_total)} sats` über `{incoming_count}` Transaktionen\n"
+        f"🔹 *Gesamtausgaben:* `{int(outgoing_total)} sats` über `{outgoing_count}` Transaktionen\n\n"
         f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
-    # Define the inline keyboard with available buttons (Overwatch entfernt)
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 View PiggyBank", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 View Transactions", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     # Send the message to Telegram with the inline keyboard
@@ -622,7 +631,7 @@ def send_wallet_balance():
         logger.info("Daily wallet balance notification with inline keyboard sent successfully.")
         # Update the latest_balance
         latest_balance["balance_sats"] = current_balance_sats
-        latest_balance["last_change"] = "Daily balance report."
+        latest_balance["last_change"] = "Täglicher Bilanzbericht."
         latest_balance["memo"] = "N/A"
         # Save the current balance
         save_current_balance(current_balance_sats)
@@ -637,11 +646,11 @@ def handle_transactions_command(chat_id):
     logger.info(f"Handling /transactions command for chat_id: {chat_id}")
     payments = fetch_api("payments")
     if payments is None:
-        bot.send_message(chat_id=chat_id, text="Error fetching transactions.")
+        bot.send_message(chat_id=chat_id, text="Fehler beim Abrufen der Transaktionen.")
         return
 
     if not isinstance(payments, list):
-        bot.send_message(chat_id=chat_id, text="Unexpected data format for transactions.")
+        bot.send_message(chat_id=chat_id, text="Unerwartetes Datenformat für Transaktionen.")
         return
 
     # Sort transactions by creation time descending
@@ -649,7 +658,7 @@ def handle_transactions_command(chat_id):
     latest = sorted_payments[:LATEST_TRANSACTIONS_COUNT]  # Get the latest n transactions
 
     if not latest:
-        bot.send_message(chat_id=chat_id, text="No transactions found.")
+        bot.send_message(chat_id=chat_id, text="Keine Transaktionen gefunden.")
         return
 
     # Initialize lists for different transaction types
@@ -686,32 +695,32 @@ def handle_transactions_command(chat_id):
                 })
 
     message_lines = [
-        f"⚡ *{INSTANCE_NAME}* - *Latest Transactions* ⚡\n"
+        f"⚡ *{INSTANCE_NAME}* - *Letzte Transaktionen* ⚡\n"
     ]
 
     if incoming_payments:
-        message_lines.append("🟢 *Incoming Payments:*")
+        message_lines.append("🟢 *Eingehende Zahlungen:*")
         for idx, payment in enumerate(incoming_payments, 1):
             message_lines.append(
-                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
+                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
             )
         message_lines.append("")
 
     if outgoing_payments:
-        message_lines.append("🔴 *Outgoing Payments:*")
+        message_lines.append("🔴 *Ausgehende Zahlungen:*")
         for idx, payment in enumerate(outgoing_payments, 1):
             message_lines.append(
-                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
+                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
             )
         message_lines.append("")
 
     if pending_payments:
-        message_lines.append("⏳ *Payments in Progress:*")
+        message_lines.append("⏳ *Zahlungen in Bearbeitung:*")
         for payment in pending_payments:
             message_lines.append(
                 f"   {payment['amount']} sats\n"
                 f"   📝 *Memo:* {payment['memo']}\n"
-                f"   📅 *Status:* In progress\n"
+                f"   📅 *Status:* In Bearbeitung\n"
             )
         message_lines.append("")
 
@@ -721,11 +730,10 @@ def handle_transactions_command(chat_id):
 
     full_message = "\n".join(message_lines)
 
-    # Define the inline keyboard with available buttons (Overwatch entfernt)
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 View PiggyBank", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 View Transactions", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
@@ -753,11 +761,10 @@ def handle_info_command(chat_id):
         f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
-    # Define the inline keyboard with available buttons (Overwatch entfernt)
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 View PiggyBank", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 View Transactions", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
@@ -773,23 +780,22 @@ def handle_balance_command(chat_id):
     logger.info(f"Handling /balance command for chat_id: {chat_id}")
     wallet_info = fetch_api("wallet")
     if wallet_info is None:
-        bot.send_message(chat_id=chat_id, text="Error fetching wallet balance.")
+        bot.send_message(chat_id=chat_id, text="Fehler beim Abrufen des Wallet-Guthabens.")
         return
 
     current_balance_msat = wallet_info.get("balance", 0)
     current_balance_sats = current_balance_msat / 1000  # Convert msats to sats
 
     message = (
-        f"📊 *{INSTANCE_NAME}* - *Wallet Balance*\n\n"
-        f"🔹 *Current Balance:* `{int(current_balance_sats)} sats`\n\n"
+        f"📊 *{INSTANCE_NAME}* - *Wallet-Guthaben*\n\n"
+        f"🔹 *Aktuelles Guthaben:* `{int(current_balance_sats)} sats`\n\n"
         f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
-    # Define the inline keyboard with available buttons (Overwatch entfernt)
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 View PiggyBank", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 View Transactions", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
@@ -819,7 +825,7 @@ def process_update(update):
             else:
                 bot.send_message(
                     chat_id=chat_id,
-                    text="Unknown command. Available commands: /balance, /transactions, /info, /help"
+                    text="Unbekannter Befehl. Verfügbare Befehle: /balance, /transactions, /info, /help"
                 )
         elif 'callback_query' in update:
             process_callback_query(update['callback_query'])
@@ -840,9 +846,9 @@ def process_callback_query(callback_query):
 
         if data == 'view_transactions':
             handle_transactions_command(chat_id)
-            bot.answer_callback_query(callback_query_id=query_id, text="Fetching latest transactions...")
+            bot.answer_callback_query(callback_query_id=query_id, text="Transaktionen werden abgerufen...")
         else:
-            bot.answer_callback_query(callback_query_id=query_id, text="Unknown action.")
+            bot.answer_callback_query(callback_query_id=query_id, text="Unbekannte Aktion.")
     except Exception as e:
         logger.error(f"Error processing callback query: {e}")
         logger.debug(traceback.format_exc())
@@ -896,7 +902,7 @@ def start_scheduler():
 
 @app.route('/')
 def home():
-    return "🔍 LNbits Monitor is running."
+    return "🔍 LNbits Monitor läuft."
 
 @app.route('/status', methods=['GET'])
 def status():
@@ -917,7 +923,7 @@ def status():
 def webhook():
     update = request.get_json()
     if not update:
-        logger.warning("Received empty update.")
+        logger.warning("Empty update received.")
         return "No update found", 400
 
     logger.debug(f"Received update: {update}")
@@ -933,11 +939,11 @@ def donations_page():
     lnurlp_id = LNURLP_ID
     lnurlp_info = get_lnurlp_info(lnurlp_id)
     if lnurlp_info is None:
-        return "Error fetching LNURLP info", 500
+        return "Fehler beim Abrufen der LNURLp-Informationen", 500
 
     # Extract the necessary information
-    wallet_name = lnurlp_info.get('description', 'Unknown Wallet')
-    lightning_address = lnurlp_info.get('lightning_address', 'Unknown Lightning Address')  # Adjust key as per your data structure
+    wallet_name = lnurlp_info.get('description', 'Unbekanntes Wallet')
+    lightning_address = lnurlp_info.get('lightning_address', 'Unbekannte Lightning-Adresse')  # Adjust key as per your data structure
     lnurl = lnurlp_info.get('lnurl', '')
 
     # Generate QR code from LNURL
@@ -987,7 +993,7 @@ def get_donations_data():
     except Exception as e:
         logger.error(f"Error fetching donations data: {e}")
         logger.debug(traceback.format_exc())
-        return jsonify({"error": "Error fetching donations data"}), 500
+        return jsonify({"error": "Fehler beim Abrufen der Spenden-Daten"}), 500
 
 # Endpoint for Long-Polling Updates
 @app.route('/donations_updates', methods=['GET'])
@@ -1001,22 +1007,22 @@ def donations_updates():
     except Exception as e:
         logger.error(f"Error fetching last_update: {e}")
         logger.debug(traceback.format_exc())
-        return jsonify({"error": "Error fetching last_update"}), 500
+        return jsonify({"error": "Fehler beim Abrufen des letzten Updates"}), 500
 
 # --------------------- Application Entry Point ---------------------
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting Lightning Piggy Balance Monitor.")
+    logger.info("🚀 Starte Lightning Piggy Balance Monitor.")
 
     # Log the current configuration
-    logger.info(f"🔔 Notification Threshold: {BALANCE_CHANGE_THRESHOLD} sats")
-    logger.info(f"📊 Fetching Latest {LATEST_TRANSACTIONS_COUNT} Transactions for Notifications")
-    logger.info(f"⏲️ Scheduler Intervals - Balance Change Monitoring: {WALLET_INFO_UPDATE_INTERVAL} seconds, Daily Wallet Balance Notification: {WALLET_BALANCE_NOTIFICATION_INTERVAL} seconds, Latest Payments Fetch: {PAYMENTS_FETCH_INTERVAL} seconds")
+    logger.info(f"🔔 Benachrichtigungsschwellenwert: {BALANCE_CHANGE_THRESHOLD} sats")
+    logger.info(f"📊 Abrufen der neuesten {LATEST_TRANSACTIONS_COUNT} Transaktionen für Benachrichtigungen")
+    logger.info(f"⏲️ Scheduler Intervalle - Guthabenänderungsüberwachung: {WALLET_INFO_UPDATE_INTERVAL} Sekunden, Tägliche Wallet-Bilanzbenachrichtigung: {WALLET_BALANCE_NOTIFICATION_INTERVAL} Sekunden, Abrufen der neuesten Zahlungen: {PAYMENTS_FETCH_INTERVAL} Sekunden")
 
     # Start the scheduler in a separate thread
     scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)
     scheduler_thread.start()
 
     # Start Flask app
-    logger.info(f"Flask server running on {APP_HOST}:{APP_PORT}")
+    logger.info(f"Flask-Server läuft auf {APP_HOST}:{APP_PORT}")
     app.run(host=APP_HOST, port=APP_PORT)
