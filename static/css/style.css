@@ -6,14 +6,13 @@
 /* CSS Variables for Colors and Themes */
 :root {
     /* Primary and Secondary Colors (Lightning Piggy Bank Theme) */
-    --primary-color: #EC008C; /* Accent Color Outline - Bright Magenta */
-    --secondary-color: #F0BCD7; /* Accent Color Fill - Light Pink */
-    --lightning-yellow: #FFDB00; /* Lightning Bolt Yellow - Bright Yellow */
+    --primary-color: #EC008C; /* Bright Magenta */
+    --secondary-color: #F0BCD7; /* Light Pink */
+    --lightning-yellow: #FFDB00; /* Bright Yellow */
 
     /* Gradient Colors */
     --header-gradient-start: #F0BCD7; /* Light Pink */
     --header-gradient-end: #FFDB00; /* Bright Yellow */
-    /* Footer is removed, so no footer-gradient variables */
 
     /* Backgrounds */
     --background-gradient-start: #F1F8E9; /* Very Light Green */
@@ -25,7 +24,6 @@
     --text-color: #333; /* Dark Gray */
     --text-color-light: #666; /* Medium Gray */
     --header-text-color: #ffffff; /* White */
-    /* Footer text color is removed */
 
     /* Highlight Colors */
     --highlight-background: #FFE0B2; /* Light Orange */
