@@ -36,10 +36,10 @@ function copyText(element) {
     console.log('Attempting to copy Lightning Address:', address); // Debugging
     navigator.clipboard.writeText(address).then(() => {
         console.log('Lightning Address copied successfully');
-        showToast('Lightning address copied to clipboard!');
+        showToast('Lightning-Adresse in die Zwischenablage kopiert!');
     }).catch(err => {
         console.error('Error copying Lightning Address:', err);
-        showToast('Failed to copy Lightning address.', true);
+        showToast('Fehler beim Kopieren der Lightning-Adresse.', true);
     });
 }
 
@@ -50,14 +50,14 @@ function copyLnurl(element) {
     if (lnurl) {
         navigator.clipboard.writeText(lnurl).then(() => {
             console.log('LNURL copied successfully');
-            showToast('LNURL copied to clipboard!');
+            showToast('LNURL in die Zwischenablage kopiert!');
         }).catch(err => {
             console.error('Error copying LNURL:', err);
-            showToast('Failed to copy LNURL.', true);
+            showToast('Fehler beim Kopieren der LNURL.', true);
         });
     } else {
         console.error('LNURL not found in the clicked element.');
-        showToast('LNURL not found!', true);
+        showToast('LNURL nicht gefunden!', true);
     }
 }
 
@@ -84,9 +84,9 @@ function updateDonations(data) {
     // Update latest donation
     if (data.donations.length > 0) {
         const latestDonation = data.donations[data.donations.length - 1];
-        document.getElementById('donationHistory').textContent = `Last Donor: ${latestDonation.amount} Sats - "${latestDonation.memo}"`;
+        document.getElementById('donationHistory').textContent = `Letztes Sparen: ${latestDonation.amount} Sats - "${latestDonation.memo}"`;
     } else {
-        document.getElementById('donationHistory').textContent = 'Last Donor: None yet.';
+        document.getElementById('donationHistory').textContent = 'Letztes Sparen: Noch nichts.';
     }
 
     // Update transactions data
@@ -110,8 +110,8 @@ function updateLightningAddress(lightningAddress, lnurl) {
             copyField.setAttribute('data-address', lightningAddress);
             addressSpan.textContent = lightningAddress;
         } else {
-            copyField.setAttribute('data-address', 'Unknown Lightning Address');
-            addressSpan.textContent = 'Unknown Lightning Address';
+            copyField.setAttribute('data-address', 'Unbekannte Lightning-Adresse');
+            addressSpan.textContent = 'Unbekannte Lightning-Adresse';
         }
     } else {
         console.error('Lightning Address elements not found in the DOM.');
@@ -128,7 +128,7 @@ function renderTable() {
     const visibleTransactions = transactionsData.slice().reverse().slice(startIndex, endIndex);
 
     if (visibleTransactions.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="3" class="no-data">No donors yet.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="3" class="no-data">Noch keine Ersparnisse.</td></tr>';
     } else {
         visibleTransactions.forEach((transaction) => {
             const row = document.createElement('tr');
@@ -181,7 +181,7 @@ async function fetchInitialDonations() {
         ]);
 
         if (!donationsResponse.ok || !updatesResponse.ok) {
-            throw new Error('Failed to fetch initial data');
+            throw new Error('Fehler beim Abrufen der initialen Daten');
         }
 
         const donationsData = await donationsResponse.json();
@@ -194,8 +194,8 @@ async function fetchInitialDonations() {
         lastUpdate = new Date(updatesData.last_update);
 
     } catch (error) {
-        console.error('Error fetching initial donations:', error);
-        showToast('Error fetching initial donations.', true);
+        console.error('Fehler beim Abrufen der initialen Ersparnisse:', error);
+        showToast('Fehler beim Abrufen der initialen Ersparnisse.', true);
     }
 }
 
@@ -204,7 +204,7 @@ async function checkForUpdates() {
     try {
         const response = await fetch('/donations_updates');
         if (!response.ok) {
-            throw new Error('Failed to fetch updates');
+            throw new Error('Fehler beim Abrufen der Updates');
         }
 
         const data = await response.json();
@@ -216,42 +216,18 @@ async function checkForUpdates() {
             // Fetch the latest donations data
             const donationsResponse = await fetch('/api/donations');
             if (!donationsResponse.ok) {
-                throw new Error('Failed to fetch updated donations');
+                throw new Error('Fehler beim Abrufen der aktualisierten Ersparnisse');
             }
             const donationsData = await donationsResponse.json();
             updateDonations(donationsData);
         }
 
     } catch (error) {
-        console.error('Error checking for updates:', error);
-        showToast('Error checking for updates.', true);
+        console.error('Fehler beim Überprüfen der Updates:', error);
+        showToast('Fehler beim Überprüfen der Updates.', true);
     } finally {
         // Schedule the next update check
         setTimeout(checkForUpdates, 5000); // Every 5 seconds
-    }
-}
-
-// Modal Functionality
-function openInfoModal(event) {
-    event.stopPropagation(); // Prevent triggering other click events
-    const modal = document.getElementById('infoModal');
-    if (modal) {
-        modal.style.display = 'block';
-    }
-}
-
-function closeInfoModal() {
-    const modal = document.getElementById('infoModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Close the modal when clicking outside the modal content
-window.onclick = function(event) {
-    const modal = document.getElementById('infoModal');
-    if (modal && event.target == modal) {
-        modal.style.display = 'none';
     }
 }
 
