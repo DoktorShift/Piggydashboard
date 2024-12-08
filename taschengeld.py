@@ -963,7 +963,7 @@ def donations_page():
 
     # Pass the donations list and additional details to the template for displaying individual transactions
     return render_template(
-        'taschengeld.html',
+        'donations.html',
         wallet_name=wallet_name,
         lightning_address=lightning_address,
         lnurl=lnurl,
