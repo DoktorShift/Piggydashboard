@@ -164,7 +164,6 @@ a {
     margin-bottom: 2.5rem;
 }
 
-/* Info Container */
 .info-container {
     display: flex;
     flex-direction: column;
@@ -389,4 +388,121 @@ table tr:hover td {
     width: 150px; /* Adjust as needed */
     height: auto;
     margin: 1rem auto 0; /* Centered and spaced below Total Saved */
+}
+
+/* Responsive Enhancements */
+
+/* Mobile Styles (max-width: 767px) */
+@media (max-width: 767px) {
+    .header {
+        padding: 1rem;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .header h5 {
+        font-size: 1rem;
+    }
+
+    .info-section {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .info-container, .donations-box, .transactions {
+        min-width: 100%;
+    }
+
+    .card, .donations-box, .transactions {
+        padding: 1rem;
+    }
+
+    .transactions h2, .donations-box h2 {
+        font-size: 1.5rem;
+    }
+
+    .donations-box .donation-amount {
+        font-size: 2rem;
+    }
+
+    .donations-box .donation-history {
+        font-size: 0.85rem;
+    }
+
+    .pagination a {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.9rem;
+    }
+
+    /* Reduzierung der Icon-Größe */
+    .material-icons.info-icon {
+        font-size: 20px;
+    }
+
+    .card .material-icons {
+        font-size: 2.5rem;
+    }
+
+    /* Anpassung der Toast-Größen */
+    .toast {
+        min-width: 200px;
+        max-width: 300px;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Tablet Styles (min-width: 768px) and (max-width: 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .header {
+        padding: 1.5rem;
+    }
+
+    .header h1 {
+        font-size: 2.3rem;
+    }
+
+    .header h5 {
+        font-size: 1.05rem;
+    }
+
+    .info-section {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .info-container, .donations-box, .transactions {
+        min-width: 45%;
+    }
+
+    .card, .donations-box, .transactions {
+        padding: 1.1rem;
+    }
+
+    .transactions h2, .donations-box h2 {
+        font-size: 1.6rem;
+    }
+
+    .donations-box .donation-amount {
+        font-size: 2.5rem;
+    }
+
+    .donations-box .donation-history {
+        font-size: 0.9rem;
+    }
+
+    .pagination a {
+        padding: 0.55rem 0.8rem;
+        font-size: 1rem;
+    }
+
+    /* Anpassung der Toast-Größen */
+    .toast {
+        min-width: 220px;
+        max-width: 320px;
+        padding: 12px 18px;
+        font-size: 1rem;
+    }
 }
