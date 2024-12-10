@@ -41,6 +41,28 @@
     --toast-error-bg: #EF5350; /* Red */
     --toast-error-text: #fff; /* White */
     --toast-transition: opacity 0.5s ease, transform 0.5s ease;
+
+    /* Darkmode Colors (Custom Palette) */
+    --dark-background-gradient-start: #1F1F28; /* Dark Anthracite */
+    --dark-background-gradient-end: #2C2C38; /* Deep Gray */
+    --dark-header-gradient-start: #1F1F28; /* Dark Anthracite */
+    --dark-header-gradient-end: #2C2C38; /* Deep Gray */
+    --dark-card-background-start: #2C2C38; /* Deep Gray */
+    --dark-card-background-end: #1F1F28; /* Dark Anthracite */
+    --dark-text-color: #ECF0F1; /* Light Gray */
+    --dark-text-color-light: #BDC3C7; /* Medium Light Gray */
+    --dark-header-text-color: #ECF0F1; /* Light Gray */
+    --dark-highlight-background: #CBBACC; /* Soft Pearl-like Pink */
+    --dark-highlight-text-color: #1F1F28; /* Dark Anthracite */
+    --dark-highlight-border: #F0E6F6; /* Pearl-like Pink */
+    --dark-copy-field-background: #CBBACC; /* Soft Pearl-like Pink */
+    --dark-copy-field-hover-background: #A39FA1; /* Darker Soft Pink */
+    
+    /* Additional Darkmode Backgrounds */
+    --dark-donations-box-background: #2A2A34; /* Darker Soft Gray */
+    --dark-transactions-background: #1E1E25; /* Very Dark Gray */
+    --dark-table-header-background: #3A3A47; /* Darker Table Header */
+    --dark-table-cell-background: #2A2A34; /* Darker Table Cells */
 }
 
 /* General Styles */
@@ -71,23 +93,23 @@ a {
 /* Header */
 .header {
     text-align: center;
-    margin-bottom: 2.5rem;
-    padding: 2rem 1rem;
-    background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end)); /* Lightning Gradient */
+    margin-bottom: 3rem; /* Erhöhter Abstand */
+    padding: 2.5rem 1.5rem; /* Mehr Padding für mehr Abstand */
+    background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end)); /* Custom Gradient */
     color: var(--header-text-color); /* White Text */
-    border-radius: 10px;
+    border-radius: 15px; /* Runde Ecken */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Softer Shadow */
     position: relative;
 }
 
 .header h1 {
-    font-size: 2.5rem; /* Slightly Reduced Size for Modern Look */
+    font-size: 3rem; /* Größere Schrift für mehr Sichtbarkeit */
     font-weight: bold;
     margin-bottom: 0.5rem;
 }
 
 .header h5 {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     color: rgba(255, 255, 255, 0.8); /* Slightly Transparent White */
 }
 
@@ -101,7 +123,7 @@ a {
 }
 
 .info-icon {
-    font-size: 24px; /* Slightly Reduced Size */
+    font-size: 28px; /* Slightly Increased Size */
     color: var(--header-text-color);
     transition: color 0.3s;
 }
@@ -112,20 +134,20 @@ a {
 
 .tooltip-text {
     visibility: hidden;
-    width: 140px;
-    background-color: rgba(0, 0, 0, 0.7); /* Slightly Less Opaque */
+    width: 160px; /* Größere Breite für mehr Platz */
+    background-color: rgba(0, 0, 0, 0.8); /* Slightly More Opaque */
     color: #fff;
     text-align: center;
-    border-radius: 6px;
-    padding: 8px 0;
+    border-radius: 8px; /* Leicht abgerundete Ecken */
+    padding: 10px 0;
     position: absolute;
     z-index: 1;
-    bottom: 125%; /* Position above the icon */
+    bottom: 140%; /* Position above the icon */
     left: 50%;
     transform: translateX(-50%);
     opacity: 0;
     transition: opacity 0.3s;
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .tooltip-text::after {
@@ -136,7 +158,7 @@ a {
     transform: translateX(-50%);
     border-width: 6px;
     border-style: solid;
-    border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent; /* Adjusted for Softer Tooltip */
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent; /* Adjusted for Softer Tooltip */
 }
 
 .info-tooltip:hover .tooltip-text {
@@ -159,15 +181,15 @@ a {
 .info-section {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.25rem;
+    gap: 1.5rem;
     justify-content: space-between;
-    margin-bottom: 2.5rem;
+    margin-bottom: 3rem; /* Mehr Abstand */
 }
 
 .info-container {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
     flex: 1;
     min-width: 280px;
 }
@@ -175,9 +197,9 @@ a {
 /* Card Styles */
 .card {
     background: linear-gradient(135deg, var(--card-background-start), var(--card-background-end));
-    border-radius: 1rem;
+    border-radius: 15px; /* Runde Ecken */
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05); /* Lighter Shadow for Softer Look */
-    padding: 1.25rem;
+    padding: 1.5rem;
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -188,40 +210,40 @@ a {
 }
 
 .card h5 {
-    margin-bottom: 0.625rem;
-    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.3rem;
     color: var(--primary-color);
 }
 
 .card p {
-    margin: 0.625rem 0;
-    font-size: 1rem;
+    margin: 0.75rem 0;
+    font-size: 1.1rem;
     color: #555;
 }
 
 .card .material-icons {
-    font-size: 3rem; /* Slightly Reduced Size */
-    margin-bottom: 0.9375rem;
+    font-size: 3.5rem; /* Slightly Increased Size */
+    margin-bottom: 1rem;
     color: var(--secondary-color);
 }
 
 /* QR Code Image Styling */
 .qr-card img {
     max-width: 100%;
-    border-radius: 0.75rem;
+    border-radius: 15px; /* Runde Ecken */
     cursor: pointer;
     transition: transform 0.3s ease;
 }
 
 .qr-card img:hover {
-    transform: scale(1.03); /* Slightly Less Intense Scale */
+    transform: scale(1.05); /* Etwas stärkeres Zoomen */
 }
 
 /* Savings Account Card Styling */
 .lightning-card .copy-field {
     background: var(--copy-field-background);
-    padding: 0.75rem;
-    border-radius: 0.5rem;
+    padding: 0.85rem;
+    border-radius: 0.75rem;
     word-break: break-all;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.2s ease;
@@ -233,16 +255,16 @@ a {
 }
 
 .lightning-card .copy-field p:first-child {
-    margin-bottom: 0.3125rem;
+    margin-bottom: 0.4rem;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 /* Savings Box */
 .donations-box {
-    background: linear-gradient(145deg, #e3eff5, #f4f9fc);
-    padding: 1.25rem;
-    border-radius: 1rem;
+    background: linear-gradient(90deg, #CBBACC, #F0E6F6); /* Custom Soft Gradient */
+    padding: 1.5rem;
+    border-radius: 15px; /* Runde Ecken */
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05); /* Lighter Shadow */
     text-align: center;
     flex: 1;
@@ -250,34 +272,34 @@ a {
 }
 
 .donations-box h2 {
-    font-size: 2rem;
-    margin-bottom: 0.625rem;
+    font-size: 2.5rem; /* Größere Schrift */
+    margin-bottom: 0.75rem;
     color: var(--primary-color);
 }
 
 .donations-box .donation-amount {
-    font-size: 2.8rem;
+    font-size: 3rem;
     font-weight: bold;
     color: var(--donation-amount-color);
 }
 
 .donations-box .donation-history {
-    margin-top: 1.25rem;
-    font-size: 0.9rem;
+    margin-top: 1.5rem;
+    font-size: 1rem;
     color: var(--text-color-light);
 }
 
 /* Savings Table */
 .transactions {
     background-color: #f9fbfc;
-    border-radius: 1rem;
+    border-radius: 15px; /* Runde Ecken */
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05); /* Lighter Shadow */
-    padding: 1.25rem;
+    padding: 1.5rem;
 }
 
 .transactions h2 {
-    font-size: 1.6rem;
-    margin-bottom: 0.9375rem;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
     color: var(--primary-color);
 }
 
@@ -287,18 +309,19 @@ table {
 }
 
 table th, table td {
-    padding: 0.75rem 0.9375rem;
+    padding: 0.85rem 1rem;
     text-align: left;
     border-bottom: 1px solid var(--copy-field-background);
 }
 
 table th {
-    background-color: #e9f3f7;
-    color: var(--primary-color);
+    background-color: #CBBACC; /* Soft Pearl-like Pink */
+    color: var(--dark-text-color);
 }
 
 table td {
-    background-color: #f9fbfc;
+    background-color: #F0E6F6; /* Pearl-like Pink */
+    color: var(--text-color);
 }
 
 table tr:hover td {
@@ -316,16 +339,16 @@ table tr:hover td {
 /* Pagination */
 .pagination {
     text-align: center;
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
 }
 
 .pagination a {
     display: inline-block;
     margin: 0 0.3125rem;
-    padding: 0.625rem 0.9375rem;
+    padding: 0.7rem 1rem;
     background-color: var(--primary-color);
     color: white;
-    border-radius: 0.3125rem;
+    border-radius: 0.4rem;
     text-decoration: none;
     transition: background-color 0.3s;
 }
@@ -337,7 +360,7 @@ table tr:hover td {
 .no-data {
     text-align: center;
     color: #999;
-    padding: 1.25rem;
+    padding: 1.5rem;
 }
 
 /* Toast Notification Styles */
@@ -355,7 +378,7 @@ table tr:hover td {
     max-width: 350px;
     margin-top: 10px;
     padding: 15px 20px;
-    border-radius: 5px;
+    border-radius: 15px; /* Runde Ecken */
     color: var(--toast-success-text);
     background-color: var(--toast-success-bg);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -385,9 +408,152 @@ table tr:hover td {
 
 /* Logo Styling */
 .logo {
-    width: 150px; /* Adjust as needed */
+    width: 180px; /* Größere Größe für bessere Sichtbarkeit */
     height: auto;
-    margin: 1rem auto 0; /* Centered and spaced below Total Saved */
+    margin: 1.5rem auto 0; /* Mehr Abstand */
+}
+
+/* Darkmode Styles */
+body.darkmode {
+    background: linear-gradient(135deg, var(--dark-background-gradient-start), var(--dark-background-gradient-end)); /* Custom Dark Gradient */
+    color: var(--dark-text-color);
+}
+
+body.darkmode .header {
+    background: linear-gradient(135deg, var(--dark-header-gradient-start), var(--dark-header-gradient-end)); /* Dark Gradient */
+    color: var(--dark-header-text-color);
+}
+
+body.darkmode .card {
+    background: linear-gradient(135deg, var(--dark-card-background-start), var(--dark-card-background-end));
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); /* Dark Shadow */
+}
+
+body.darkmode .card h5 {
+    color: var(--primary-color);
+}
+
+body.darkmode .card p {
+    color: var(--dark-text-color-light);
+}
+
+body.darkmode .info-icon {
+    color: var(--dark-header-text-color);
+}
+
+body.darkmode .tooltip-text {
+    background-color: rgba(255, 255, 255, 0.8); /* Light background for tooltips in darkmode */
+    color: #333;
+}
+
+body.darkmode .copy-field {
+    background: var(--dark-copy-field-background);
+}
+
+body.darkmode .copy-field:hover {
+    background: var(--dark-copy-field-hover-background);
+}
+
+body.darkmode .donations-box {
+    background: var(--dark-donations-box-background); /* Darker Soft Gray */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+body.darkmode .donations-box h2 {
+    color: var(--primary-color);
+}
+
+body.darkmode .donations-box .donation-amount {
+    color: var(--donation-amount-color);
+}
+
+body.darkmode .transactions {
+    background-color: var(--dark-transactions-background); /* Very Dark Gray */
+}
+
+body.darkmode table th {
+    background-color: var(--dark-table-header-background); /* Darker Table Header */
+    color: var(--dark-text-color);
+}
+
+body.darkmode table td {
+    background-color: var(--dark-table-cell-background); /* Darker Table Cells */
+    color: var(--dark-text-color);
+}
+
+body.darkmode table tr:hover td {
+    background-color: var(--dark-copy-field-background);
+}
+
+body.darkmode .highlight {
+    background-color: var(--dark-highlight-background) !important;
+    color: var(--dark-highlight-text-color) !important;
+    border-left: 5px solid var(--dark-highlight-border);
+}
+
+body.darkmode .pagination a {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+body.darkmode .pagination a:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Darkmode Toggle Styles */
+.darkmode-toggle {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    margin-right: 0; /* Kein Abstand, da kein Label */
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #fff; /* Weißer Hintergrund bei aktiviertem Darkmode */
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+    background-color: #1F1F28; /* Dunkle Farbe für den Slider-Knopf */
 }
 
 /* Responsive Enhancements */
@@ -396,6 +562,7 @@ table tr:hover td {
 @media (max-width: 767px) {
     .header {
         padding: 1rem;
+        margin-bottom: 2rem;
     }
 
     .header h1 {
@@ -458,6 +625,7 @@ table tr:hover td {
 @media (min-width: 768px) and (max-width: 1023px) {
     .header {
         padding: 1.5rem;
+        margin-bottom: 2.8rem;
     }
 
     .header h1 {
