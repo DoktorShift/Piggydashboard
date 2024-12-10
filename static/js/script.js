@@ -5,6 +5,10 @@ let transactionsData = []; // Store transaction history
 const rowsPerPage = 10; // Number of rows to display per page
 let currentPage = 1;
 let lastUpdate = null; // Timestamp of the last update
+let highlightThreshold = 2100; // Default threshold
+
+// Darkmode Elements
+let darkmodeCheckbox; // Wird nach DOMContentLoaded initialisiert
 
 // Function to show a toast notification
 function showToast(message, isError = false) {
@@ -95,6 +99,12 @@ function updateDonations(data) {
     // Update Lightning Address and LNURL
     updateLightningAddress(data.lightning_address, data.lnurl);
 
+    // Update Highlight Threshold
+    if (data.highlight_threshold) {
+        highlightThreshold = data.highlight_threshold;
+        console.log(`Hervorhebungsschwellenwert aktualisiert auf: ${highlightThreshold} sats`);
+    }
+
     // Render the table and pagination
     renderTable();
     renderPagination();
@@ -134,7 +144,7 @@ function renderTable() {
             const row = document.createElement('tr');
 
             // Check if donation is greater than highlight threshold
-            if (transaction.amount > 2100) { // Example Threshold: 2,100 Sats
+            if (transaction.amount > highlightThreshold) { // Use dynamic threshold
                 row.classList.add('highlight');
             }
 
@@ -193,6 +203,9 @@ async function fetchInitialDonations() {
         // Set the initial lastUpdate timestamp
         lastUpdate = new Date(updatesData.last_update);
 
+        // Initialize Darkmode based on saved preference
+        initializeDarkmode();
+
     } catch (error) {
         console.error('Fehler beim Abrufen der initialen Ersparnisse:', error);
         showToast('Fehler beim Abrufen der initialen Ersparnisse.', true);
@@ -231,10 +244,42 @@ async function checkForUpdates() {
     }
 }
 
+// Darkmode Funktionen
+
+// Funktion zum Initialisieren des Darkmodes basierend auf gespeicherter Präferenz
+function initializeDarkmode() {
+    darkmodeCheckbox = document.getElementById('darkmode-checkbox');
+
+    const darkmodeEnabled = localStorage.getItem('darkmode') === 'true';
+    darkmodeCheckbox.checked = darkmodeEnabled;
+    if (darkmodeEnabled) {
+        document.body.classList.add('darkmode');
+    } else {
+        document.body.classList.remove('darkmode');
+    }
+}
+
+// Event Listener für den Darkmode-Toggle
+function setupDarkmodeToggle() {
+    darkmodeCheckbox = document.getElementById('darkmode-checkbox');
+
+    darkmodeCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            document.body.classList.add('darkmode');
+            localStorage.setItem('darkmode', 'true');
+        } else {
+            document.body.classList.remove('darkmode');
+            localStorage.setItem('darkmode', 'false');
+        }
+    });
+}
+
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", function() {
     // Fetch initial donations data
     fetchInitialDonations();
     // Start checking for updates
     checkForUpdates();
+    // Setup Darkmode Toggle
+    setupDarkmodeToggle();
 });
