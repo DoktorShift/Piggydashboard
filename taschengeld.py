@@ -46,6 +46,7 @@ LNURLP_ID = os.getenv("LNURLP_ID")
 
 # Notification Settings
 BALANCE_CHANGE_THRESHOLD = int(os.getenv("BALANCE_CHANGE_THRESHOLD", "10"))  # Default: 10 sats
+HIGHLIGHT_THRESHOLD = int(os.getenv("HIGHLIGHT_THRESHOLD", "2100"))  # Default: 2100 sats
 LATEST_TRANSACTIONS_COUNT = int(os.getenv("LATEST_TRANSACTIONS_COUNT", "21"))  # Default: 21 transactions
 
 # Scheduler Intervals (in seconds)
@@ -300,7 +301,8 @@ def fetch_donation_details():
             "total_donations": total_donations,
             "donations": donations,
             "lightning_address": "Unavailable",
-            "lnurl": "Unavailable"
+            "lnurl": "Unavailable",
+            "highlight_threshold": HIGHLIGHT_THRESHOLD  # Include the threshold
         }
     
     # Extract username and construct lightning_address
@@ -314,7 +316,7 @@ def fetch_donation_details():
     
     # Extract LNURL
     lnurl = lnurlp_info.get('lnurl', 'Unavailable')  # Adjust key as per your data structure
-    
+
     logger.debug(f"Constructed Lightning Address: {lightning_address}")
     logger.debug(f"Fetched LNURL: {lnurl}")
     
@@ -322,7 +324,8 @@ def fetch_donation_details():
         "total_donations": total_donations,
         "donations": donations,
         "lightning_address": lightning_address,
-        "lnurl": lnurl
+        "lnurl": lnurl,
+        "highlight_threshold": HIGHLIGHT_THRESHOLD  # Include the threshold
     }
 
 def update_donations_with_details(data):
@@ -338,7 +341,8 @@ def update_donations_with_details(data):
     donation_details = fetch_donation_details()
     data.update({
         "lightning_address": donation_details.get("lightning_address"),
-        "lnurl": donation_details.get("lnurl")
+        "lnurl": donation_details.get("lnurl"),
+        "highlight_threshold": donation_details.get("highlight_threshold")  # Add threshold
     })
     return data
 
@@ -363,9 +367,9 @@ def updateDonations(data):
     if updated_data["donations"]:
         latestDonation = updated_data["donations"][-1]
         # Again, frontend handles DOM updates
-        logger.info(f'Latest donation: {latestDonation["amount"]} sats - "{latestDonation["memo"]}"')
+        logger.info(f'Letzte Spende: {latestDonation["amount"]} sats - "{latestDonation["memo"]}"')
     else:
-        logger.info('Latest donation: None yet.')
+        logger.info('Letzte Spende: Noch nichts.')
     
     # Update transactions data
     # Frontend fetches via API
@@ -383,13 +387,13 @@ def send_latest_payments():
     Additionally, payments are checked to determine if they qualify as donations.
     """
     global total_donations, donations, last_update  # Declare global variables
-    logger.info("Fetching latest payments...")
+    logger.info("Abrufen der neuesten Zahlungen...")
     payments = fetch_api("payments")
     if payments is None:
         return
 
     if not isinstance(payments, list):
-        logger.error("Unexpected data format for payments.")
+        logger.error("Unerwartetes Datenformat für Zahlungen.")
         return
 
     # Sort payments by creation time descending
@@ -397,7 +401,7 @@ def send_latest_payments():
     latest = sorted_payments[:LATEST_TRANSACTIONS_COUNT]  # Get the latest n payments
 
     if not latest:
-        logger.info("No payments found.")
+        logger.info("Keine Zahlungen gefunden.")
         return
 
     # Initialize lists for different payment types
@@ -458,7 +462,7 @@ def send_latest_payments():
             donations.append(donation)
             total_donations += donation_amount_sats
             last_update = datetime.utcnow()
-            logger.info(f"New donation detected: {donation_amount_sats} sats - {donation_memo}")
+            logger.info(f"Neue Spende erkannt: {donation_amount_sats} sats - {donation_memo}")
             save_donations()  # Save updated donations
 
         # Mark payment as processed
@@ -467,36 +471,36 @@ def send_latest_payments():
         add_processed_payment(payment_hash)
 
     if not incoming_payments and not outgoing_payments and not pending_payments:
-        logger.info("No new payments to notify.")
+        logger.info("Keine neuen Zahlungen zum Benachrichtigen.")
         return
 
     message_lines = [
-        f"⚡ *{INSTANCE_NAME}* - *Latest Transactions* ⚡\n"
+        f"⚡ *{INSTANCE_NAME}* - *Letzte Transaktionen* ⚡\n"
     ]
 
     if incoming_payments:
-        message_lines.append("🟢 *Incoming Payments:*")
+        message_lines.append("🟢 *Eingehende Zahlungen:*")
         for idx, payment in enumerate(incoming_payments, 1):
             message_lines.append(
-                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
+                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
             )
         message_lines.append("")
 
     if outgoing_payments:
-        message_lines.append("🔴 *Outgoing Payments:*")
+        message_lines.append("🔴 *Ausgehende Zahlungen:*")
         for idx, payment in enumerate(outgoing_payments, 1):
             message_lines.append(
-                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
+                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {payment['memo']}"
             )
         message_lines.append("")
 
     if pending_payments:
-        message_lines.append("⏳ *Payments in Progress:*")
+        message_lines.append("⏳ *Zahlungen in Bearbeitung:*")
         for payment in pending_payments:
             message_lines.append(
                 f"   {payment['amount']} sats\n"
                 f"   📝 *Memo:* {payment['memo']}\n"
-                f"   📅 *Status:* In progress\n"
+                f"   📅 *Status:* In Bearbeitung\n"
             )
         message_lines.append("")
 
@@ -515,10 +519,10 @@ def send_latest_payments():
     # Send the message to Telegram with the inline keyboard
     try:
         bot.send_message(chat_id=CHAT_ID, text=full_message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-        logger.info("Latest payments notification sent to Telegram successfully.")
+        logger.info("Neueste Zahlungen Benachrichtigung erfolgreich an Telegram gesendet.")
         latest_payments.extend(new_processed_hashes)
     except Exception as telegram_error:
-        logger.error(f"Failed to send payments message to Telegram: {telegram_error}")
+        logger.error(f"Fehler beim Senden der Zahlungen-Nachricht an Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def check_balance_change():
@@ -526,7 +530,7 @@ def check_balance_change():
     Periodically check the wallet balance and notify if it has changed beyond the threshold.
     """
     global last_update
-    logger.info("Checking for balance changes...")
+    logger.info("Überprüfen der Guthabenänderungen...")
     wallet_info = fetch_api("wallet")
     if wallet_info is None:
         return
@@ -540,25 +544,25 @@ def check_balance_change():
         # First run, initialize the balance file
         save_current_balance(current_balance_sats)
         latest_balance["balance_sats"] = current_balance_sats
-        latest_balance["last_change"] = "Initial balance set."
+        latest_balance["last_change"] = "Initiales Guthaben gesetzt."
         latest_balance["memo"] = "N/A"
-        logger.info(f"Initial balance set to {current_balance_sats:.0f} sats.")
+        logger.info(f"Initiales Guthaben auf {current_balance_sats:.0f} sats gesetzt.")
         return
 
     change_amount = current_balance_sats - last_balance
     if abs(change_amount) < BALANCE_CHANGE_THRESHOLD:
-        logger.info(f"Balance change ({abs(change_amount):.0f} sats) below threshold ({BALANCE_CHANGE_THRESHOLD} sats). No notification sent.")
+        logger.info(f"Guthabenänderung ({abs(change_amount):.0f} sats) unter dem Schwellenwert ({BALANCE_CHANGE_THRESHOLD} sats). Keine Benachrichtigung gesendet.")
         return
 
-    direction = "increased" if change_amount > 0 else "decreased"
+    direction = "erhöht" if change_amount > 0 else "verringert"
     abs_change = abs(change_amount)
 
     # Prepare the Telegram message with markdown formatting
     message = (
-        f"⚡ *{INSTANCE_NAME}* - *Balance Update* ⚡\n\n"
-        f"🔹 *Previous Balance:* `{int(last_balance):,} sats`\n"
-        f"🔹 *Change:* `{'+' if change_amount > 0 else '-'}{int(abs_change):,} sats`\n"
-        f"🔹 *New Balance:* `{int(current_balance_sats):,} sats`\n\n"
+        f"⚡ *{INSTANCE_NAME}* - *Guthabenaktualisierung* ⚡\n\n"
+        f"🔹 *Vorheriges Guthaben:* `{int(last_balance):,} sats`\n"
+        f"🔹 *Änderung:* `{'+' if change_amount > 0 else '-'}{int(abs_change):,} sats`\n"
+        f"🔹 *Neues Guthaben:* `{int(current_balance_sats):,} sats`\n\n"
         f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
@@ -571,21 +575,21 @@ def check_balance_change():
     # Send message to Telegram with the inline keyboard
     try:
         bot.send_message(chat_id=CHAT_ID, text=message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-        logger.info(f"Balance changed from {last_balance:.0f} to {current_balance_sats:.0f} sats. Notification sent.")
+        logger.info(f"Guthaben von {last_balance:.0f} auf {current_balance_sats:.0f} sats geändert. Benachrichtigung gesendet.")
         # Update the balance file and latest_balance
         save_current_balance(current_balance_sats)
         latest_balance["balance_sats"] = current_balance_sats
-        latest_balance["last_change"] = f"Balance {direction} by {int(abs_change):,} sats."
+        latest_balance["last_change"] = f"Guthaben {direction} um {int(abs_change):,} sats."
         latest_balance["memo"] = "N/A"
     except Exception as telegram_error:
-        logger.error(f"Failed to send balance change message to Telegram: {telegram_error}")
+        logger.error(f"Fehler beim Senden der Guthabenänderungsnachricht an Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def send_wallet_balance():
     """
     Send the current wallet balance via Telegram in a professional and clear format.
     """
-    logger.info("Sending daily wallet balance notification...")
+    logger.info("Senden der täglichen Wallet-Bilanzbenachrichtigung...")
     wallet_info = fetch_api("wallet")
     if wallet_info is None:
         return
@@ -628,7 +632,7 @@ def send_wallet_balance():
     # Send the message to Telegram with the inline keyboard
     try:
         bot.send_message(chat_id=CHAT_ID, text=message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-        logger.info("Daily wallet balance notification with inline keyboard sent successfully.")
+        logger.info("Tägliche Wallet-Bilanzbenachrichtigung mit Inline-Tastatur erfolgreich gesendet.")
         # Update the latest_balance
         latest_balance["balance_sats"] = current_balance_sats
         latest_balance["last_change"] = "Täglicher Bilanzbericht."
@@ -636,7 +640,7 @@ def send_wallet_balance():
         # Save the current balance
         save_current_balance(current_balance_sats)
     except Exception as telegram_error:
-        logger.error(f"Failed to send daily wallet balance message to Telegram: {telegram_error}")
+        logger.error(f"Fehler beim Senden der täglichen Wallet-Bilanznachricht an Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def handle_transactions_command(chat_id):
@@ -739,7 +743,7 @@ def handle_transactions_command(chat_id):
     try:
         bot.send_message(chat_id=chat_id, text=full_message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
     except Exception as telegram_error:
-        logger.error(f"Failed to send /transactions message to Telegram: {telegram_error}")
+        logger.error(f"Fehler beim Senden der /transactions Nachricht an Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def handle_info_command(chat_id):
@@ -749,10 +753,11 @@ def handle_info_command(chat_id):
     logger.info(f"Handling /info command for chat_id: {chat_id}")
     # Prepare Interval Information
     interval_info = (
-        f"🔔 *Balance Change Threshold:* `{BALANCE_CHANGE_THRESHOLD} sats`\n"
-        f"⏲️ *Balance Change Monitoring Interval:* Every `{WALLET_INFO_UPDATE_INTERVAL} seconds`\n"
-        f"📊 *Daily Wallet Balance Notification Interval:* Every `{WALLET_BALANCE_NOTIFICATION_INTERVAL} seconds`\n"
-        f"🔄 *Latest Payments Fetch Interval:* Every `{PAYMENTS_FETCH_INTERVAL} seconds`"
+        f"🔔 *Guthabenänderungsschwellenwert:* `{BALANCE_CHANGE_THRESHOLD} sats`\n"
+        f"🔔 *Hervorhebungsschwellenwert:* `{HIGHLIGHT_THRESHOLD} sats`\n"
+        f"⏲️ *Intervall zur Überwachung der Guthabenänderung:* Alle `{WALLET_INFO_UPDATE_INTERVAL} Sekunden`\n"
+        f"📊 *Intervall für tägliche Wallet-Bilanzbenachrichtigungen:* Alle `{WALLET_BALANCE_NOTIFICATION_INTERVAL} Sekunden`\n"
+        f"🔄 *Intervall zum Abrufen der neuesten Zahlungen:* Alle `{PAYMENTS_FETCH_INTERVAL} Sekunden`"
     )
 
     info_message = (
@@ -770,7 +775,7 @@ def handle_info_command(chat_id):
     try:
         bot.send_message(chat_id=chat_id, text=info_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True, reply_markup=reply_markup)
     except Exception as telegram_error:
-        logger.error(f"Failed to send /info message to Telegram: {telegram_error}")
+        logger.error(f"Fehler beim Senden der /info Nachricht an Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def handle_balance_command(chat_id):
@@ -801,7 +806,34 @@ def handle_balance_command(chat_id):
     try:
         bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
     except Exception as telegram_error:
-        logger.error(f"Failed to send /balance message to Telegram: {telegram_error}")
+        logger.error(f"Fehler beim Senden der /balance Nachricht an Telegram: {telegram_error}")
+        logger.debug(traceback.format_exc())
+
+def handle_help_command(chat_id):
+    """
+    Handle the /help command sent by the user.
+    """
+    logger.info(f"Handling /help command for chat_id: {chat_id}")
+    help_message = (
+        f"ℹ️ *{INSTANCE_NAME}* - *Hilfe*\n\n"
+        f"Verfügbare Befehle:\n"
+        f"• `/balance` – Zeigt das aktuelle Wallet-Guthaben an.\n"
+        f"• `/transactions` – Zeigt die neuesten Transaktionen.\n"
+        f"• `/info` – Bietet Informationen über den Monitor und aktuelle Einstellungen.\n"
+        f"• `/help` – Zeigt diese Hilfenachricht an.\n\n"
+        f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    )
+
+    keyboard = []
+    if DONATIONS_URL:
+        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    try:
+        bot.send_message(chat_id=chat_id, text=help_message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+    except Exception as telegram_error:
+        logger.error(f"Fehler beim Senden der /help Nachricht an Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def process_update(update):
@@ -830,9 +862,9 @@ def process_update(update):
         elif 'callback_query' in update:
             process_callback_query(update['callback_query'])
         else:
-            logger.info("Update does not contain a message or callback_query. Ignoring.")
+            logger.info("Update enthält keine Nachricht oder callback_query. Ignoriere.")
     except Exception as e:
-        logger.error(f"Error processing update: {e}")
+        logger.error(f"Fehler beim Verarbeiten des Updates: {e}")
         logger.debug(traceback.format_exc())
 
 def process_callback_query(callback_query):
@@ -850,7 +882,7 @@ def process_callback_query(callback_query):
         else:
             bot.answer_callback_query(callback_query_id=query_id, text="Unbekannte Aktion.")
     except Exception as e:
-        logger.error(f"Error processing callback query: {e}")
+        logger.error(f"Fehler beim Verarbeiten der Callback-Abfrage: {e}")
         logger.debug(traceback.format_exc())
 
 def start_scheduler():
@@ -867,9 +899,9 @@ def start_scheduler():
             id='balance_check',
             next_run_time=datetime.utcnow() + timedelta(seconds=1)
         )
-        logger.info(f"Balance change monitoring scheduled every {WALLET_INFO_UPDATE_INTERVAL} seconds.")
+        logger.info(f"Guthabenänderungsüberwachung alle {WALLET_INFO_UPDATE_INTERVAL} Sekunden geplant.")
     else:
-        logger.info("Balance change monitoring is disabled (WALLET_INFO_UPDATE_INTERVAL set to 0).")
+        logger.info("Guthabenänderungsüberwachung ist deaktiviert (WALLET_INFO_UPDATE_INTERVAL auf 0 gesetzt).")
 
     if WALLET_BALANCE_NOTIFICATION_INTERVAL > 0:
         scheduler.add_job(
@@ -879,9 +911,9 @@ def start_scheduler():
             id='wallet_balance_notification',
             next_run_time=datetime.utcnow() + timedelta(seconds=1)
         )
-        logger.info(f"Daily wallet balance notification scheduled every {WALLET_BALANCE_NOTIFICATION_INTERVAL} seconds.")
+        logger.info(f"Tägliche Wallet-Bilanzbenachrichtigung alle {WALLET_BALANCE_NOTIFICATION_INTERVAL} Sekunden geplant.")
     else:
-        logger.info("Daily wallet balance notification is disabled (WALLET_BALANCE_NOTIFICATION_INTERVAL set to 0).")
+        logger.info("Tägliche Wallet-Bilanzbenachrichtigung ist deaktiviert (WALLET_BALANCE_NOTIFICATION_INTERVAL auf 0 gesetzt).")
 
     if PAYMENTS_FETCH_INTERVAL > 0:
         scheduler.add_job(
@@ -891,12 +923,12 @@ def start_scheduler():
             id='latest_payments_fetch',
             next_run_time=datetime.utcnow() + timedelta(seconds=1)
         )
-        logger.info(f"Latest payments fetch scheduled every {PAYMENTS_FETCH_INTERVAL} seconds.")
+        logger.info(f"Neueste Zahlungen Abruf alle {PAYMENTS_FETCH_INTERVAL} Sekunden geplant.")
     else:
-        logger.info("Latest payments fetch notification is disabled (PAYMENTS_FETCH_INTERVAL set to 0).")
+        logger.info("Abrufen der neuesten Zahlungen ist deaktiviert (PAYMENTS_FETCH_INTERVAL auf 0 gesetzt).")
 
     scheduler.start()
-    logger.info("Scheduler started successfully.")
+    logger.info("Scheduler erfolgreich gestartet.")
 
 # --------------------- Flask Routes ---------------------
 
@@ -907,7 +939,7 @@ def home():
 @app.route('/status', methods=['GET'])
 def status():
     """
-    Returns the status of the application, including latest balance, payments, total donations, donations, Lightning Address, and LNURL.
+    Gibt den Status der Anwendung zurück, einschließlich des neuesten Guthabens, Zahlungen, Gesamtspenden, Spenden, Lightning Address und LNURL.
     """
     donation_details = fetch_donation_details()
     return jsonify({
@@ -916,17 +948,18 @@ def status():
         "total_donations": donation_details["total_donations"],
         "donations": donation_details["donations"],
         "lightning_address": donation_details["lightning_address"],
-        "lnurl": donation_details["lnurl"]
+        "lnurl": donation_details["lnurl"],
+        "highlight_threshold": donation_details["highlight_threshold"]  # Include threshold
     })
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = request.get_json()
     if not update:
-        logger.warning("Empty update received.")
+        logger.warning("Leeres Update erhalten.")
         return "No update found", 400
 
-    logger.debug(f"Received update: {update}")
+    logger.debug(f"Update empfangen: {update}")
 
     # Process the message in a separate thread to avoid blocking
     threading.Thread(target=process_update, args=(update,)).start()
@@ -971,14 +1004,15 @@ def donations_page():
         donations_url=DONATIONS_URL,  # Pass the donations URL to the template
         information_url=INFORMATION_URL,  # Pass the information URL to the template
         total_donations=total_donations_current,  # Pass total donations
-        donations=donations  # Pass donations list
+        donations=donations,  # Pass donations list
+        highlight_threshold=HIGHLIGHT_THRESHOLD  # Pass highlight threshold
     )
 
 # API Endpoint to Serve Donation Data
 @app.route('/api/donations', methods=['GET'])
 def get_donations_data():
     """
-    Serve the donations data as JSON for the front-end, including Lightning Address and LNURL.
+    Serve the donations data as JSON for the front-end, including Lightning Address, LNURL, and Highlight Threshold.
     """
     try:
         donation_details = fetch_donation_details()
@@ -986,12 +1020,13 @@ def get_donations_data():
             "total_donations": donation_details["total_donations"],
             "donations": donation_details["donations"],
             "lightning_address": donation_details["lightning_address"],
-            "lnurl": donation_details["lnurl"]
+            "lnurl": donation_details["lnurl"],
+            "highlight_threshold": donation_details["highlight_threshold"]  # Include threshold
         }
-        logger.debug(f"Serving donations data with details: {data}")
+        logger.debug(f"Spenden-Daten mit Details serviert: {data}")
         return jsonify(data), 200
     except Exception as e:
-        logger.error(f"Error fetching donations data: {e}")
+        logger.error(f"Fehler beim Abrufen der Spenden-Daten: {e}")
         logger.debug(traceback.format_exc())
         return jsonify({"error": "Fehler beim Abrufen der Spenden-Daten"}), 500
 
@@ -999,13 +1034,13 @@ def get_donations_data():
 @app.route('/donations_updates', methods=['GET'])
 def donations_updates():
     """
-    Endpoint for clients to check the timestamp of the latest donation update.
+    Endpoint für Clients, um den Zeitstempel des letzten Spenden-Updates zu überprüfen.
     """
     global last_update
     try:
         return jsonify({"last_update": last_update.isoformat()}), 200
     except Exception as e:
-        logger.error(f"Error fetching last_update: {e}")
+        logger.error(f"Fehler beim Abrufen des letzten Updates: {e}")
         logger.debug(traceback.format_exc())
         return jsonify({"error": "Fehler beim Abrufen des letzten Updates"}), 500
 
@@ -1016,6 +1051,7 @@ if __name__ == "__main__":
 
     # Log the current configuration
     logger.info(f"🔔 Benachrichtigungsschwellenwert: {BALANCE_CHANGE_THRESHOLD} sats")
+    logger.info(f"🔔 Hervorhebungsschwellenwert: {HIGHLIGHT_THRESHOLD} sats")
     logger.info(f"📊 Abrufen der neuesten {LATEST_TRANSACTIONS_COUNT} Transaktionen für Benachrichtigungen")
     logger.info(f"⏲️ Scheduler Intervalle - Guthabenänderungsüberwachung: {WALLET_INFO_UPDATE_INTERVAL} Sekunden, Tägliche Wallet-Bilanzbenachrichtigung: {WALLET_BALANCE_NOTIFICATION_INTERVAL} Sekunden, Abrufen der neuesten Zahlungen: {PAYMENTS_FETCH_INTERVAL} Sekunden")
 
