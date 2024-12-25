@@ -18,62 +18,62 @@ import json
 from urllib.parse import urlparse
 import re
 
-# --------------------- Konfiguration und Setup ---------------------
+# --------------------- Configuration and Setup ---------------------
 
-# Laden von Umgebungsvariablen aus der .env-Datei
+# Load environment variables from the .env file
 load_dotenv()
 
-# Telegram-Konfiguration
+# Telegram Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-# Konvertieren von CHAT_ID zu einem Integer, falls vorhanden
+# Convert CHAT_ID to an integer, if present
 try:
     CHAT_ID = int(CHAT_ID)
 except (TypeError, ValueError):
-    raise EnvironmentError("CHAT_ID muss eine Ganzzahl sein.")
+    raise EnvironmentError("CHAT_ID must be an integer.")
 
-# LNbits-Konfiguration
+# LNbits Configuration
 LNBITS_READONLY_API_KEY = os.getenv("LNBITS_READONLY_API_KEY")
 LNBITS_URL = os.getenv("LNBITS_URL")
 INSTANCE_NAME = os.getenv("INSTANCE_NAME", "LNbits Instance")
 
-# Extrahieren der Domain aus LNBITS_URL
+# Extract domain from LNBITS_URL
 parsed_lnbits_url = urlparse(LNBITS_URL)
 LNBITS_DOMAIN = parsed_lnbits_url.netloc
 
-# Spendenparameter
+# Donation Parameters
 LNURLP_ID = os.getenv("LNURLP_ID")
 
-# Benachrichtigungseinstellungen
-BALANCE_CHANGE_THRESHOLD = int(os.getenv("BALANCE_CHANGE_THRESHOLD", "10"))  # Standard: 10 sats
-HIGHLIGHT_THRESHOLD = int(os.getenv("HIGHLIGHT_THRESHOLD", "2100"))  # Standard: 2100 sats
-LATEST_TRANSACTIONS_COUNT = int(os.getenv("LATEST_TRANSACTIONS_COUNT", "21"))  # Standard: 21 Transaktionen
+# Notification Settings
+BALANCE_CHANGE_THRESHOLD = int(os.getenv("BALANCE_CHANGE_THRESHOLD", "10"))  # Default: 10 sats
+HIGHLIGHT_THRESHOLD = int(os.getenv("HIGHLIGHT_THRESHOLD", "2100"))  # Default: 2100 sats
+LATEST_TRANSACTIONS_COUNT = int(os.getenv("LATEST_TRANSACTIONS_COUNT", "21"))  # Default: 21 transactions
 
-# Scheduler-Intervalle (in Sekunden)
-WALLET_INFO_UPDATE_INTERVAL = int(os.getenv("WALLET_INFO_UPDATE_INTERVAL", "86400"))  # Standard: 86400 Sekunden (24 Stunden)
-WALLET_BALANCE_NOTIFICATION_INTERVAL = int(os.getenv("WALLET_BALANCE_NOTIFICATION_INTERVAL", "86400"))  # Standard: 86400 Sekunden (24 Stunden)
-PAYMENTS_FETCH_INTERVAL = int(os.getenv("PAYMENTS_FETCH_INTERVAL", "60"))  # Standard: 60 Sekunden (1 Minute)
+# Scheduler Intervals (in seconds)
+WALLET_INFO_UPDATE_INTERVAL = int(os.getenv("WALLET_INFO_UPDATE_INTERVAL", "86400"))  # Default: 86400 seconds (24 hours)
+WALLET_BALANCE_NOTIFICATION_INTERVAL = int(os.getenv("WALLET_BALANCE_NOTIFICATION_INTERVAL", "86400"))  # Default: 86400 seconds (24 hours)
+PAYMENTS_FETCH_INTERVAL = int(os.getenv("PAYMENTS_FETCH_INTERVAL", "60"))  # Default: 60 seconds (1 minute)
 
-# Flask-Server-Konfiguration
-APP_HOST = os.getenv("APP_HOST", "127.0.0.1")  # Standard: localhost
-APP_PORT = int(os.getenv("APP_PORT", "5009"))  # Standard: Port 5009
+# Flask Server Configuration
+APP_HOST = os.getenv("APP_HOST", "127.0.0.1")  # Default: localhost
+APP_PORT = int(os.getenv("APP_PORT", "5009"))  # Default: port 5009
 
-# Dateipfade
+# File Paths
 PROCESSED_PAYMENTS_FILE = os.getenv("PROCESSED_PAYMENTS_FILE", "processed_payments.txt")
 CURRENT_BALANCE_FILE = os.getenv("CURRENT_BALANCE_FILE", "current-balance.txt")
 DONATIONS_FILE = os.getenv("DONATIONS_FILE", "donations.json")
 
-# Spenden-Konfiguration
-DONATIONS_URL = os.getenv("DONATIONS_URL")  # Optional; kein Standardwert
+# Donation Configuration
+DONATIONS_URL = os.getenv("DONATIONS_URL")  # Optional; no default value
 
-# Informations-URL-Konfiguration
-INFORMATION_URL = os.getenv("INFORMATION_URL")  # Neue Umgebungsvariable
+# Information URL Configuration
+INFORMATION_URL = os.getenv("INFORMATION_URL")  # New environment variable
 
-# Schimpfwortfilter-Konfiguration
+# Profanity Filter Configuration
 FORBIDDEN_WORDS_FILE = os.getenv("FORBIDDEN_WORDS_FILE", "forbidden_words.txt")
 
-# Validierung wesentlicher Umgebungsvariablen (ausschließlich Overwatch und DONATIONS_URL ausschließend)
+# Validate essential environment variables (excluding Overwatch and DONATIONS_URL)
 required_vars = {
     "TELEGRAM_BOT_TOKEN": TELEGRAM_BOT_TOKEN,
     "CHAT_ID": CHAT_ID,
@@ -83,90 +83,90 @@ required_vars = {
 
 missing_vars = [var for var, value in required_vars.items() if not value]
 if missing_vars:
-    raise EnvironmentError(f"Erforderliche Umgebungsvariablen fehlen: {', '.join(missing_vars)}")
+    raise EnvironmentError(f"Required environment variables missing: {', '.join(missing_vars)}")
 
-# Initialisieren des Telegram-Bots
+# Initialize the Telegram Bot
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
-# --------------------- Logging-Konfiguration ---------------------
+# --------------------- Logging Configuration ---------------------
 logger = logging.getLogger("lnbits_logger")
 logger.setLevel(logging.DEBUG)
 
-# Dateihandler für detaillierte Logs
+# File handler for detailed logs
 file_handler = RotatingFileHandler("app.log", maxBytes=5 * 1024 * 1024, backupCount=3)
 file_handler.setLevel(logging.DEBUG)
 
-# Console-Handler für allgemeine Informationen
+# Console handler for general information
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
-# Log-Format
+# Log format
 formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
 file_handler.setFormatter(formatter)
 console_handler.setFormatter(formatter)
 
-# Hinzufügen der Handler zum Logger
+# Add handlers to the logger
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-# --------------------- Hilfsfunktionen ---------------------
+# --------------------- Helper Functions ---------------------
 
 def load_forbidden_words(file_path):
     """
-    Laden von Schimpfworten aus einer angegebenen Datei in eine Menge.
+    Load forbidden words from a specified file into a set.
     
     Args:
-        file_path (str): Pfad zur Schimpfwort-Datei.
+        file_path (str): Path to the forbidden words file.
         
     Returns:
-        set: Eine Menge, die alle Schimpfwörter enthält.
+        set: A set containing all forbidden words.
     """
     forbidden = set()
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 word = line.strip()
-                if word:  # Leere Zeilen vermeiden
+                if word:  # Avoid empty lines
                     forbidden.add(word.lower())
-        logger.debug(f"Geladene Schimpfwörter aus {file_path}: {forbidden}")
+        logger.debug(f"Loaded forbidden words from {file_path}: {forbidden}")
     except FileNotFoundError:
-        logger.error(f"Schimpfwort-Datei nicht gefunden unter {file_path}.")
+        logger.error(f"Forbidden words file not found at {file_path}.")
     except Exception as e:
-        logger.error(f"Fehler beim Laden der Schimpfwörter aus {file_path}: {e}")
+        logger.error(f"Error loading forbidden words from {file_path}: {e}")
         logger.debug(traceback.format_exc())
     return forbidden
 
 def sanitize_memo(memo, forbidden_words):
     """
-    Sanitieren des Memo-Feldes, indem Schimpfwörter durch Sternchen ersetzt werden.
+    Sanitize the memo field by replacing forbidden words with asterisks.
     
     Args:
-        memo (str): Der ursprüngliche Memo-Text.
-        forbidden_words (set): Eine Menge von Schimpfwörtern.
+        memo (str): The original memo text.
+        forbidden_words (set): A set of forbidden words.
         
     Returns:
-        str: Der sanitierte Memo-Text.
+        str: The sanitized memo text.
     """
     if not memo:
-        return "Kein Memo"
+        return "No Memo"
     
-    # Funktion zum Ersetzen des gefundenen Wortes durch Sternchen
+    # Function to replace the matched word with asterisks
     def replace_match(match):
         word = match.group()
         return '*' * len(word)
     
-    # Erstellen eines Regex-Musters, das alle Schimpfwörter erkennt
+    # Create a regex pattern that matches any forbidden words
     if not forbidden_words:
-        return memo  # Keine Schimpfwörter zum Sanitieren
+        return memo  # No forbidden words to sanitize
     
     pattern = re.compile(r'\b(' + '|'.join(map(re.escape, forbidden_words)) + r')\b', re.IGNORECASE)
     sanitized_memo = pattern.sub(replace_match, memo)
-    logger.debug(f"Sanitierter Memo: Original: '{memo}' -> Sanitisiert: '{sanitized_memo}'")
+    logger.debug(f"Sanitized Memo: Original: '{memo}' -> Sanitized: '{sanitized_memo}'")
     return sanitized_memo
 
 def load_processed_payments():
     """
-    Laden der bereits verarbeiteten Zahlungs-Hashes aus der Tracking-Datei in eine Menge.
+    Load already processed payment hashes from the tracking file into a set.
     """
     processed = set()
     if os.path.exists(PROCESSED_PAYMENTS_FILE):
@@ -174,64 +174,64 @@ def load_processed_payments():
             with open(PROCESSED_PAYMENTS_FILE, 'r') as f:
                 for line in f:
                     processed.add(line.strip())
-            logger.debug(f"{len(processed)} verarbeitete Zahlungs-Hashes geladen.")
+            logger.debug(f"Loaded {len(processed)} processed payment hashes.")
         except Exception as e:
-            logger.error(f"Fehler beim Laden der verarbeiteten Zahlungen: {e}")
+            logger.error(f"Error loading processed payments: {e}")
             logger.debug(traceback.format_exc())
     return processed
 
 def add_processed_payment(payment_hash):
     """
-    Hinzufügen eines verarbeiteten Zahlungs-Hashes zur Tracking-Datei.
+    Add a processed payment hash to the tracking file.
     """
     try:
         with open(PROCESSED_PAYMENTS_FILE, 'a') as f:
             f.write(f"{payment_hash}\n")
-        logger.debug(f"Zahlungs-Hash {payment_hash} zu verarbeiteten Zahlungen hinzugefügt.")
+        logger.debug(f"Added payment hash {payment_hash} to processed payments.")
     except Exception as e:
-        logger.error(f"Fehler beim Hinzufügen der verarbeiteten Zahlung: {e}")
+        logger.error(f"Error adding processed payment: {e}")
         logger.debug(traceback.format_exc())
 
 def load_last_balance():
     """
-    Laden des letzten bekannten Guthabens aus der Guthaben-Datei.
+    Load the last known balance from the balance file.
     """
     if not os.path.exists(CURRENT_BALANCE_FILE):
-        logger.info("Guthaben-Datei existiert nicht. Initialisierung mit aktuellem Guthaben.")
+        logger.info("Balance file does not exist. Initializing with current balance.")
         return None
     try:
         with open(CURRENT_BALANCE_FILE, 'r') as f:
             content = f.read().strip()
             if not content:
-                logger.warning("Guthaben-Datei ist leer. Setze letztes Guthaben auf 0.")
+                logger.warning("Balance file is empty. Setting last balance to 0.")
                 return 0.0
             try:
                 balance = float(content)
-                logger.debug(f"Letztes Guthaben geladen: {balance} sats.")
+                logger.debug(f"Loaded last balance: {balance} sats.")
                 return balance
             except ValueError:
-                logger.error(f"Ungültiger Guthabenswert in Datei: {content}. Setze letztes Guthaben auf 0.")
+                logger.error(f"Invalid balance value in file: {content}. Setting last balance to 0.")
                 return 0.0
     except Exception as e:
-        logger.error(f"Fehler beim Laden des letzten Guthabens: {e}")
+        logger.error(f"Error loading last balance: {e}")
         logger.debug(traceback.format_exc())
         return 0.0
 
 def save_current_balance(balance):
     """
-    Speichern des aktuellen Guthabens in der Guthaben-Datei.
+    Save the current balance to the balance file.
     """
     try:
         with open(CURRENT_BALANCE_FILE, 'w') as f:
             f.write(f"{balance}\n")
-        logger.debug(f"Aktuelles Guthaben {balance} sats erfolgreich gespeichert.")
+        logger.debug(f"Successfully saved current balance {balance} sats.")
     except Exception as e:
-        logger.error(f"Fehler beim Speichern des aktuellen Guthabens: {e}")
+        logger.error(f"Error saving current balance: {e}")
         logger.debug(traceback.format_exc())
 
 def load_donations():
     """
-    Laden der Spenden aus der Spenden-Datei in die Spendenliste und Setzen der Gesamtspenden.
+    Load donations from the donations file into the donations list and set total donations.
     """
     global donations, total_donations
     if os.path.exists(DONATIONS_FILE):
@@ -240,14 +240,14 @@ def load_donations():
                 data = json.load(f)
                 donations = data.get("donations", [])
                 total_donations = data.get("total_donations", 0)
-            logger.debug(f"{len(donations)} Spenden aus der Datei geladen.")
+            logger.debug(f"Loaded {len(donations)} donations from the file.")
         except Exception as e:
-            logger.error(f"Fehler beim Laden der Spenden: {e}")
+            logger.error(f"Error loading donations: {e}")
             logger.debug(traceback.format_exc())
 
 def save_donations():
     """
-    Speichern der Spenden in der Spenden-Datei.
+    Save donations to the donations file.
     """
     try:
         with open(DONATIONS_FILE, 'w', encoding='utf-8') as f:
@@ -255,18 +255,18 @@ def save_donations():
                 "total_donations": total_donations,
                 "donations": donations
             }, f, ensure_ascii=False, indent=4)
-        logger.debug("Spenden-Daten erfolgreich gespeichert.")
+        logger.debug("Successfully saved donations data.")
     except Exception as e:
-        logger.error(f"Fehler beim Speichern der Spenden: {e}")
+        logger.error(f"Error saving donations: {e}")
         logger.debug(traceback.format_exc())
 
-# Initialisieren der Menge der verarbeiteten Zahlungen
+# Initialize the set of processed payments
 processed_payments = load_processed_payments()
 
-# Initialisieren der Flask-App
+# Initialize the Flask app
 app = Flask(__name__)
 
-# Globale Variablen zur Speicherung der neuesten Daten
+# Global variables to store the latest data
 latest_balance = {
     "balance_sats": None,
     "last_change": None,
@@ -275,24 +275,24 @@ latest_balance = {
 
 latest_payments = []
 
-# Datenstrukturen für Spenden
+# Data structures for donations
 donations = []
 total_donations = 0
 
-# Globale Variable zur Verfolgung der letzten Aktualisierungszeit
+# Global variable to track the last update time
 last_update = datetime.utcnow()
 
-# Laden bestehender Spenden beim Start
+# Load existing donations at startup
 load_donations()
 
-# Laden der verbotenen Wörter beim Start
+# Load forbidden words at startup
 FORBIDDEN_WORDS = load_forbidden_words(FORBIDDEN_WORDS_FILE)
 
-# --------------------- Funktionen ---------------------
+# --------------------- Functions ---------------------
 
 def fetch_api(endpoint):
     """
-    Abrufen von Daten von der LNbits-API.
+    Fetch data from the LNbits API.
     """
     url = f"{LNBITS_URL}/api/v1/{endpoint}"
     headers = {"X-Api-Key": LNBITS_READONLY_API_KEY}
@@ -300,19 +300,19 @@ def fetch_api(endpoint):
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
             data = response.json()
-            logger.debug(f"Daten von {endpoint} abgerufen: {data}")
+            logger.debug(f"Fetched data from {endpoint}: {data}")
             return data
         else:
-            logger.error(f"Fehler beim Abrufen von {endpoint}. Status Code: {response.status_code}")
+            logger.error(f"Error fetching {endpoint}. Status Code: {response.status_code}")
             return None
     except Exception as e:
-        logger.error(f"Fehler beim Abrufen von {endpoint}: {e}")
+        logger.error(f"Error fetching {endpoint}: {e}")
         logger.debug(traceback.format_exc())
         return None
 
 def fetch_pay_links():
     """
-    Abrufen von Pay-Links von der LNbits LNURLp Erweiterungs-API.
+    Fetch Pay-Links from the LNbits LNURLp Extension API.
     """
     url = f"{LNBITS_URL}/lnurlp/api/v1/links"
     headers = {"X-Api-Key": LNBITS_READONLY_API_KEY}
@@ -320,152 +320,152 @@ def fetch_pay_links():
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
             data = response.json()
-            logger.debug(f"Pay-Links abgerufen: {data}")
+            logger.debug(f"Fetched Pay-Links: {data}")
             return data
         else:
-            logger.error(f"Fehler beim Abrufen der Pay-Links. Status Code: {response.status_code}")
+            logger.error(f"Error fetching Pay-Links. Status Code: {response.status_code}")
             return None
     except Exception as e:
-        logger.error(f"Fehler beim Abrufen der Pay-Links: {e}")
+        logger.error(f"Error fetching Pay-Links: {e}")
         logger.debug(traceback.format_exc())
         return None
 
 def get_lnurlp_info(lnurlp_id):
     """
-    Abrufen von LNURLp-Informationen für eine gegebene lnurlp_id.
+    Fetch LNURLp information for a given lnurlp_id.
     """
     pay_links = fetch_pay_links()
     if pay_links is None:
-        logger.error("Kann die Pay-Links nicht abrufen.")
+        logger.error("Cannot fetch Pay-Links.")
         return None
 
     for pay_link in pay_links:
         if pay_link.get("id") == lnurlp_id:
-            logger.debug(f"Passender Pay-Link gefunden: {pay_link}")
+            logger.debug(f"Matching Pay-Link found: {pay_link}")
             return pay_link
 
-    logger.error(f"Kein Pay-Link mit der ID {lnurlp_id} gefunden.")
+    logger.error(f"No Pay-Link found with ID {lnurlp_id}.")
     return None
 
 def fetch_donation_details():
     """
-    Abrufen von LNURLp-Informationen und Integration der Lightning Address und LNURL in die Spenden-Details.
+    Fetch LNURLp information and integrate the Lightning Address and LNURL into the donation details.
     
     Returns:
-        dict: Ein Wörterbuch mit Gesamtspenden, Spendenliste, Lightning Address und LNURL.
+        dict: A dictionary containing total donations, donations list, Lightning Address, and LNURL.
     """
     lnurlp_info = get_lnurlp_info(LNURLP_ID)
     if lnurlp_info is None:
-        logger.error("Kann die LNURLp-Informationen für die Spenden-Details nicht abrufen.")
+        logger.error("Cannot fetch LNURLp information for donation details.")
         return {
             "total_donations": total_donations,
             "donations": donations,
-            "lightning_address": "Nicht verfügbar",
-            "lnurl": "Nicht verfügbar",
-            "highlight_threshold": HIGHLIGHT_THRESHOLD  # Schwellenwert einbeziehen
+            "lightning_address": "Not Available",
+            "lnurl": "Not Available",
+            "highlight_threshold": HIGHLIGHT_THRESHOLD  # Include threshold
         }
 
-    # Extrahieren des Benutzernamens und Konstruktion der Lightning Address
-    username = lnurlp_info.get('username')  # Anpassen des Schlüssels basierend auf Ihrer LNURLp-Antwort
+    # Extract the username and construct the Lightning Address
+    username = lnurlp_info.get('username')  # Adjust key based on your LNURLp response
     if not username:
-        username = "Unbekannt"
-        logger.warning("Benutzername in den LNURLp-Informationen nicht gefunden.")
+        username = "Unknown"
+        logger.warning("Username not found in LNURLp information.")
 
-    # Konstruktion der vollständigen Lightning Address
+    # Construct the full Lightning Address
     lightning_address = f"{username}@{LNBITS_DOMAIN}"
 
-    # Extrahieren der LNURL
-    lnurl = lnurlp_info.get('lnurl', 'Nicht verfügbar')  # Anpassen des Schlüssels basierend auf Ihrer Datenstruktur
+    # Extract the LNURL
+    lnurl = lnurlp_info.get('lnurl', 'Not Available')  # Adjust key based on your data structure
 
-    logger.debug(f"Konstruktion der Lightning Address: {lightning_address}")
-    logger.debug(f"Abgerufene LNURL: {lnurl}")
+    logger.debug(f"Constructed Lightning Address: {lightning_address}")
+    logger.debug(f"Fetched LNURL: {lnurl}")
 
     return {
         "total_donations": total_donations,
         "donations": donations,
         "lightning_address": lightning_address,
         "lnurl": lnurl,
-        "highlight_threshold": HIGHLIGHT_THRESHOLD  # Schwellenwert einbeziehen
+        "highlight_threshold": HIGHLIGHT_THRESHOLD  # Include threshold
     }
 
 def update_donations_with_details(data):
     """
-    Aktualisiert die Spenden-Daten mit zusätzlichen Details wie Lightning Address und LNURL.
+    Update the donations data with additional details like Lightning Address and LNURL.
     
     Parameters:
-        data (dict): Die ursprünglichen Spenden-Daten.
+        data (dict): The original donations data.
     
     Returns:
-        dict: Aktualisierte Spenden-Daten mit zusätzlichen Details.
+        dict: Updated donations data with additional details.
     """
     donation_details = fetch_donation_details()
     data.update({
         "lightning_address": donation_details.get("lightning_address"),
         "lnurl": donation_details.get("lnurl"),
-        "highlight_threshold": donation_details.get("highlight_threshold")  # Schwellenwert hinzufügen
+        "highlight_threshold": donation_details.get("highlight_threshold")  # Include threshold
     })
     return data
 
 def updateDonations(data):
     """
-    Aktualisieren der Spenden und verwandter UI-Elemente mit neuen Daten.
+    Update donations and related UI elements with new data.
     
-    Diese Funktion wurde erweitert, um Lightning Address und LNURL in die an das Frontend gesendeten Daten einzubeziehen.
+    This function has been extended to include Lightning Address and LNURL in the data sent to the frontend.
     
     Parameters:
-        data (dict): Die Daten, die Gesamtspenden und die Spendenliste enthalten.
+        data (dict): The data containing total donations and the donations list.
     """
-    # Integration zusätzlicher Spenden-Details
+    # Integrate additional donation details
     updated_data = update_donations_with_details(data)
     
     totalDonations = updated_data["total_donations"]
-    # Aktualisierung der Gesamtspenden im Frontend
-    # Da dies eine Backend-Funktion ist, wird das Frontend aktualisierte Daten über die API abrufen
-    # Daher keine direkte DOM-Manipulation hier
+    # Update total donations in the frontend
+    # Since this is a backend function, the frontend will fetch updated data via the API
+    # Therefore, no direct DOM manipulation here
     
-    # Aktualisierung der neuesten Spende
+    # Update the latest donation
     if updated_data["donations"]:
         latestDonation = updated_data["donations"][-1]
-        # Frontend übernimmt die Aktualisierung der DOM
+        # Frontend handles DOM updates
         sanitized_memo = sanitize_memo(latestDonation["memo"], FORBIDDEN_WORDS)
-        logger.info(f'Letzte Spende: {latestDonation["amount"]} sats - "{sanitized_memo}"')
+        logger.info(f'Latest donation: {latestDonation["amount"]} sats - "{sanitized_memo}"')
     else:
-        logger.info('Letzte Spende: Noch keine Spenden vorhanden.')
+        logger.info('Latest donation: No donations yet.')
     
-    # Aktualisierung der Transaktionsdaten
-    # Frontend ruft diese über die API ab
+    # Update transaction data
+    # Frontend retrieves this via the API
     
-    # Aktualisierung der Lightning Address und LNURL
+    # Update Lightning Address and LNURL
     logger.debug(f"Lightning Address: {updated_data.get('lightning_address')}")
     logger.debug(f"LNURL: {updated_data.get('lnurl')}")
     
-    # Speichern der aktualisierten Spenden-Daten
+    # Save the updated donations data
     save_donations()
 
 def send_latest_payments():
     """
-    Abrufen der neuesten Zahlungen und Senden einer Benachrichtigung via Telegram.
-    Zusätzlich werden Zahlungen überprüft, ob sie als Spenden qualifizieren.
+    Fetch the latest payments and send a notification via Telegram.
+    Additionally, check if payments qualify as donations.
     """
-    global total_donations, donations, last_update  # Deklarieren globaler Variablen
-    logger.info("Abrufen der neuesten Zahlungen...")
+    global total_donations, donations, last_update  # Declare global variables
+    logger.info("Fetching the latest payments...")
     payments = fetch_api("payments")
     if payments is None:
         return
 
     if not isinstance(payments, list):
-        logger.error("Unerwartetes Datenformat für Zahlungen.")
+        logger.error("Unexpected data format for payments.")
         return
 
-    # Sortieren der Zahlungen nach Erstellungszeit absteigend
+    # Sort payments by creation time descending
     sorted_payments = sorted(payments, key=lambda x: x.get("created_at", ""), reverse=True)
-    latest = sorted_payments[:LATEST_TRANSACTIONS_COUNT]  # Die neuesten n Zahlungen abrufen
+    latest = sorted_payments[:LATEST_TRANSACTIONS_COUNT]  # Fetch the latest n payments
 
     if not latest:
-        logger.info("Keine Zahlungen gefunden.")
+        logger.info("No payments found.")
         return
 
-    # Initialisieren von Listen für verschiedene Zahlungstypen
+    # Initialize lists for different payment types
     incoming_payments = []
     outgoing_payments = []
     pending_payments = []
@@ -474,10 +474,10 @@ def send_latest_payments():
     for payment in latest:
         payment_hash = payment.get("payment_hash")
         if payment_hash in processed_payments:
-            continue  # Bereits verarbeitete Zahlungen überspringen
+            continue  # Skip already processed payments
 
         amount_msat = payment.get("amount", 0)
-        memo = payment.get("memo", "Kein Memo")
+        memo = payment.get("memo", "No Memo")
         status = payment.get("status", "completed")
 
         try:
@@ -503,18 +503,18 @@ def send_latest_payments():
                     "memo": memo
                 })
 
-        # Überprüfen auf Spenden via LNURLp ID
+        # Check for donations via LNURLp ID
         extra_data = payment.get("extra", {})
         lnurlp_id_payment = extra_data.get("link")
         if lnurlp_id_payment == LNURLP_ID:
-            # Es ist eine Spende
-            donation_memo = extra_data.get("comment", "Kein Memo")
-            # Sicherstellen, dass 'extra' ein numerischer Wert in msats ist
+            # It's a donation
+            donation_memo = extra_data.get("comment", "No Memo")
+            # Ensure 'extra' is a numeric value in msats
             try:
                 donation_amount_msat = int(extra_data.get("extra", 0))
-                donation_amount_sats = donation_amount_msat / 1000  # Umrechnung msats in sats
+                donation_amount_sats = donation_amount_msat / 1000  # Convert msats to sats
             except (ValueError, TypeError):
-                donation_amount_sats = amount_sats  # Fallback, falls 'extra' nicht numerisch ist
+                donation_amount_sats = amount_sats  # Fallback if 'extra' is not numeric
             donation = {
                 "date": datetime.utcnow().isoformat(),
                 "memo": donation_memo,
@@ -523,149 +523,150 @@ def send_latest_payments():
             donations.append(donation)
             total_donations += donation_amount_sats
             last_update = datetime.utcnow()
-            sanitized_memo = sanitize_memo(donation_amount_sats, FORBIDDEN_WORDS)
-            logger.info(f"Neue Spende erkannt: {donation_amount_sats} sats - {donation_memo}")
+            # **Fixed Line:** Pass donation_memo instead of donation_amount_sats
+            sanitized_memo = sanitize_memo(donation_memo, FORBIDDEN_WORDS)
+            logger.info(f"New donation detected: {donation_amount_sats} sats - {donation_memo}")
             updateDonations({
                 "total_donations": total_donations,
                 "donations": donations
-            })  # Aktualisieren der Spenden mit Details
+            })  # Update donations with details
 
-        # Markieren der Zahlung als verarbeitet
+        # Mark the payment as processed
         processed_payments.add(payment_hash)
         new_processed_hashes.append(payment_hash)
         add_processed_payment(payment_hash)
 
     if not incoming_payments and not outgoing_payments and not pending_payments:
-        logger.info("Keine neuen Zahlungen zum Benachrichtigen.")
+        logger.info("No new payments to notify.")
         return
 
     message_lines = [
-        f"⚡ *{INSTANCE_NAME}* - *Letzte Transaktionen* ⚡\n"
+        f"⚡ *{INSTANCE_NAME}* - *Latest Transactions* ⚡\n"
     ]
 
     if incoming_payments:
-        message_lines.append("🟢 *Eingehende Zahlungen:*")
+        message_lines.append("🟢 *Incoming Payments:*")
         for idx, payment in enumerate(incoming_payments, 1):
             sanitized_memo = sanitize_memo(payment["memo"], FORBIDDEN_WORDS)
             message_lines.append(
-                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
+                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
             )
         message_lines.append("")
 
     if outgoing_payments:
-        message_lines.append("🔴 *Ausgehende Zahlungen:*")
+        message_lines.append("🔴 *Outgoing Payments:*")
         for idx, payment in enumerate(outgoing_payments, 1):
             sanitized_memo = sanitize_memo(payment["memo"], FORBIDDEN_WORDS)
             message_lines.append(
-                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
+                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
             )
         message_lines.append("")
 
     if pending_payments:
-        message_lines.append("⏳ *Zahlungen in Bearbeitung:*")
+        message_lines.append("⏳ *Pending Payments:*")
         for payment in pending_payments:
             sanitized_memo = sanitize_memo(payment["memo"], FORBIDDEN_WORDS)
             message_lines.append(
                 f"   {payment['amount']} sats\n"
                 f"   📝 *Memo:* {sanitized_memo}\n"
-                f"   📅 *Status:* In Bearbeitung\n"
+                f"   📅 *Status:* Pending\n"
             )
         message_lines.append("")
 
-    # Hinzufügen des Zeitstempels
-    timestamp_text = f"🕒 *Zeitstempel:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    # Add timestamp
+    timestamp_text = f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     message_lines.append(timestamp_text)
 
     full_message = "\n".join(message_lines)
 
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Show Piggy Bank", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Show Transactions", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Senden der Nachricht an Telegram mit der Inline-Tastatur
+    # Send the message to Telegram with the inline keyboard
     try:
         bot.send_message(chat_id=CHAT_ID, text=full_message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-        logger.info("Neueste Zahlungen Benachrichtigung erfolgreich an Telegram gesendet.")
+        logger.info("Latest payments notification successfully sent to Telegram.")
         latest_payments.extend(new_processed_hashes)
     except Exception as telegram_error:
-        logger.error(f"Fehler beim Senden der Zahlungen-Nachricht an Telegram: {telegram_error}")
+        logger.error(f"Error sending payments message to Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def check_balance_change():
     """
-    Periodisches Überprüfen des Wallet-Guthabens und Benachrichtigung, wenn es sich über dem Schwellenwert ändert.
+    Periodically check the wallet balance and notify if it changes beyond the threshold.
     """
     global last_update
-    logger.info("Überprüfen der Guthabenänderungen...")
+    logger.info("Checking balance changes...")
     wallet_info = fetch_api("wallet")
     if wallet_info is None:
         return
 
     current_balance_msat = wallet_info.get("balance", 0)
-    current_balance_sats = current_balance_msat / 1000  # Umrechnung msats in sats
+    current_balance_sats = current_balance_msat / 1000  # Convert msats to sats
 
     last_balance = load_last_balance()
 
     if last_balance is None:
-        # Erster Lauf, Initialisieren der Guthaben-Datei
+        # First run, initialize the balance file
         save_current_balance(current_balance_sats)
         latest_balance["balance_sats"] = current_balance_sats
-        latest_balance["last_change"] = "Initiales Guthaben gesetzt."
+        latest_balance["last_change"] = "Initial balance set."
         latest_balance["memo"] = "N/A"
-        logger.info(f"Initiales Guthaben auf {current_balance_sats:.0f} sats gesetzt.")
+        logger.info(f"Initial balance set to {current_balance_sats:.0f} sats.")
         return
 
     change_amount = current_balance_sats - last_balance
     if abs(change_amount) < BALANCE_CHANGE_THRESHOLD:
-        logger.info(f"Guthabenänderung ({abs(change_amount):.0f} sats) unter dem Schwellenwert ({BALANCE_CHANGE_THRESHOLD} sats). Keine Benachrichtigung gesendet.")
+        logger.info(f"Balance change ({abs(change_amount):.0f} sats) below threshold ({BALANCE_CHANGE_THRESHOLD} sats). No notification sent.")
         return
 
-    direction = "erhöht" if change_amount > 0 else "verringert"
+    direction = "increased" if change_amount > 0 else "decreased"
     abs_change = abs(change_amount)
 
-    # Vorbereitung der Telegram-Nachricht mit Markdown-Formatierung
+    # Prepare the Telegram message with Markdown formatting
     message = (
-        f"⚡ *{INSTANCE_NAME}* - *Guthabenaktualisierung* ⚡\n\n"
-        f"🔹 *Vorheriges Guthaben:* `{int(last_balance):,} sats`\n"
-        f"🔹 *Änderung:* `{'+' if change_amount > 0 else '-'}{int(abs_change):,} sats`\n"
-        f"🔹 *Neues Guthaben:* `{int(current_balance_sats):,} sats`\n\n"
-        f"🕒 *Zeitstempel:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        f"⚡ *{INSTANCE_NAME}* - *Balance Update* ⚡\n\n"
+        f"🔹 *Previous Balance:* `{int(last_balance):,} sats`\n"
+        f"🔹 *Change:* `{'+' if change_amount > 0 else '-'}{int(abs_change):,} sats`\n"
+        f"🔹 *New Balance:* `{int(current_balance_sats):,} sats`\n\n"
+        f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Show Piggy Bank", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Show Transactions", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Senden der Nachricht an Telegram mit der Inline-Tastatur
+    # Send the message to Telegram with the inline keyboard
     try:
         bot.send_message(chat_id=CHAT_ID, text=message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-        logger.info(f"Guthaben von {last_balance:.0f} auf {current_balance_sats:.0f} sats geändert. Benachrichtigung gesendet.")
-        # Aktualisieren der Guthaben-Datei und der neuesten Guthabensdaten
+        logger.info(f"Balance changed from {last_balance:.0f} to {current_balance_sats:.0f} sats. Notification sent.")
+        # Update the balance file and latest balance data
         save_current_balance(current_balance_sats)
         latest_balance["balance_sats"] = current_balance_sats
-        latest_balance["last_change"] = f"Guthaben {direction} um {int(abs_change):,} sats."
+        latest_balance["last_change"] = f"Balance {direction} by {int(abs_change):,} sats."
         latest_balance["memo"] = "N/A"
     except Exception as telegram_error:
-        logger.error(f"Fehler beim Senden der Guthabenänderungsnachricht an Telegram: {telegram_error}")
+        logger.error(f"Error sending balance change message to Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def send_wallet_balance():
     """
-    Senden der aktuellen Wallet-Bilanz via Telegram in einem professionellen und klaren Format.
+    Send the current wallet balance via Telegram in a professional and clear format.
     """
-    logger.info("Senden der täglichen Wallet-Bilanzbenachrichtigung...")
+    logger.info("Sending daily wallet balance notification...")
     wallet_info = fetch_api("wallet")
     if wallet_info is None:
         return
 
     current_balance_msat = wallet_info.get("balance", 0)
-    current_balance_sats = current_balance_msat / 1000  # Umrechnung msats in sats
+    current_balance_sats = current_balance_msat / 1000  # Convert msats to sats
 
-    # Abrufen der Zahlungen zur Berechnung von Anzahl und Gesamtsummen
+    # Fetch payments to calculate counts and totals
     payments = fetch_api("payments")
     incoming_count = outgoing_count = 0
     incoming_total = outgoing_total = 0
@@ -674,7 +675,7 @@ def send_wallet_balance():
             amount_msat = payment.get("amount", 0)
             status = payment.get("status", "completed")
             if status.lower() == "pending":
-                continue  # Ausschließen von ausstehenden Zahlungen für die tägliche Bilanz
+                continue  # Exclude pending payments for daily balance
             if amount_msat > 0:
                 incoming_count += 1
                 incoming_total += amount_msat / 1000
@@ -682,65 +683,65 @@ def send_wallet_balance():
                 outgoing_count += 1
                 outgoing_total += abs(amount_msat) / 1000
 
-    # Vorbereitung der Telegram-Nachricht mit Markdown-Formatierung
+    # Prepare the Telegram message with Markdown formatting
     message = (
-        f"📊 *{INSTANCE_NAME}* - *Tägliche Wallet-Bilanz* 📊\n\n"
-        f"🔹 *Aktuelles Guthaben:* `{int(current_balance_sats)} sats`\n"
-        f"🔹 *Gesamteinnahmen:* `{int(incoming_total)} sats` über `{incoming_count}` Transaktionen\n"
-        f"🔹 *Gesamtausgaben:* `{int(outgoing_total)} sats` über `{outgoing_count}` Transaktionen\n\n"
-        f"🕒 *Zeitstempel:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        f"📊 *{INSTANCE_NAME}* - *Daily Wallet Balance* 📊\n\n"
+        f"🔹 *Current Balance:* `{int(current_balance_sats)} sats`\n"
+        f"🔹 *Total Incoming:* `{int(incoming_total)} sats` over `{incoming_count}` transactions\n"
+        f"🔹 *Total Outgoing:* `{int(outgoing_total)} sats` over `{outgoing_count}` transactions\n\n"
+        f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Show Piggy Bank", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Show Transactions", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    # Senden der Nachricht an Telegram mit der Inline-Tastatur
+    # Send the message to Telegram with the inline keyboard
     try:
         bot.send_message(chat_id=CHAT_ID, text=message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-        logger.info("Tägliche Wallet-Bilanzbenachrichtigung mit Inline-Tastatur erfolgreich gesendet.")
-        # Aktualisieren der neuesten Guthabensdaten
+        logger.info("Daily wallet balance notification with inline keyboard successfully sent.")
+        # Update the latest balance data
         latest_balance["balance_sats"] = current_balance_sats
-        latest_balance["last_change"] = "Täglicher Bilanzbericht."
+        latest_balance["last_change"] = "Daily balance report."
         latest_balance["memo"] = "N/A"
-        # Speichern des aktuellen Guthabens
+        # Save the current balance
         save_current_balance(current_balance_sats)
     except Exception as telegram_error:
-        logger.error(f"Fehler beim Senden der täglichen Wallet-Bilanznachricht an Telegram: {telegram_error}")
+        logger.error(f"Error sending daily wallet balance message to Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def handle_transactions_command(chat_id):
     """
-    Behandeln des /transactions Befehls, der vom Benutzer gesendet wurde.
+    Handle the /transactions command sent by the user.
     """
-    logger.info(f"Behandle /transactions Befehl für chat_id: {chat_id}")
+    logger.info(f"Handling /transactions command for chat_id: {chat_id}")
     payments = fetch_api("payments")
     if payments is None:
-        bot.send_message(chat_id=chat_id, text="Fehler beim Abrufen der Transaktionen.")
+        bot.send_message(chat_id=chat_id, text="Error fetching transactions.")
         return
 
     if not isinstance(payments, list):
-        bot.send_message(chat_id=chat_id, text="Unerwartetes Datenformat für Transaktionen.")
+        bot.send_message(chat_id=chat_id, text="Unexpected data format for transactions.")
         return
 
-    # Sortieren der Transaktionen nach Erstellungszeit absteigend
+    # Sort transactions by creation time descending
     sorted_payments = sorted(payments, key=lambda x: x.get("created_at", ""), reverse=True)
-    latest = sorted_payments[:LATEST_TRANSACTIONS_COUNT]  # Die neuesten n Transaktionen abrufen
+    latest = sorted_payments[:LATEST_TRANSACTIONS_COUNT]  # Fetch the latest n transactions
 
     if not latest:
-        bot.send_message(chat_id=chat_id, text="Keine Transaktionen gefunden.")
+        bot.send_message(chat_id=chat_id, text="No transactions found.")
         return
 
-    # Initialisieren von Listen für verschiedene Transaktionstypen
+    # Initialize lists for different transaction types
     incoming_payments = []
     outgoing_payments = []
     pending_payments = []
 
     for payment in latest:
         amount_msat = payment.get("amount", 0)
-        memo = payment.get("memo", "Kein Memo")
+        memo = payment.get("memo", "No Memo")
         status = payment.get("status", "completed")
 
         try:
@@ -767,149 +768,149 @@ def handle_transactions_command(chat_id):
                 })
 
     message_lines = [
-        f"⚡ *{INSTANCE_NAME}* - *Letzte Transaktionen* ⚡\n"
+        f"⚡ *{INSTANCE_NAME}* - *Latest Transactions* ⚡\n"
     ]
 
     if incoming_payments:
-        message_lines.append("🟢 *Eingehende Zahlungen:*")
+        message_lines.append("🟢 *Incoming Payments:*")
         for idx, payment in enumerate(incoming_payments, 1):
             sanitized_memo = sanitize_memo(payment["memo"], FORBIDDEN_WORDS)
             message_lines.append(
-                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
+                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
             )
         message_lines.append("")
 
     if outgoing_payments:
-        message_lines.append("🔴 *Ausgehende Zahlungen:*")
+        message_lines.append("🔴 *Outgoing Payments:*")
         for idx, payment in enumerate(outgoing_payments, 1):
             sanitized_memo = sanitize_memo(payment["memo"], FORBIDDEN_WORDS)
             message_lines.append(
-                f"{idx}. *Betrag:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
+                f"{idx}. *Amount:* `{payment['amount']} sats`\n   *Memo:* {sanitized_memo}"
             )
         message_lines.append("")
 
     if pending_payments:
-        message_lines.append("⏳ *Zahlungen in Bearbeitung:*")
+        message_lines.append("⏳ *Pending Payments:*")
         for payment in pending_payments:
             sanitized_memo = sanitize_memo(payment["memo"], FORBIDDEN_WORDS)
             message_lines.append(
                 f"   {payment['amount']} sats\n"
                 f"   📝 *Memo:* {sanitized_memo}\n"
-                f"   📅 *Status:* In Bearbeitung\n"
+                f"   📅 *Status:* Pending\n"
             )
         message_lines.append("")
 
-    # Hinzufügen des Zeitstempels
-    timestamp_text = f"🕒 *Zeitstempel:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    # Add timestamp
+    timestamp_text = f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     message_lines.append(timestamp_text)
 
     full_message = "\n".join(message_lines)
 
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Show Piggy Bank", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Show Transactions", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
         bot.send_message(chat_id=chat_id, text=full_message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
     except Exception as telegram_error:
-        logger.error(f"Fehler beim Senden der /transactions Nachricht an Telegram: {telegram_error}")
+        logger.error(f"Error sending /transactions message to Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def handle_info_command(chat_id):
     """
-    Behandeln des /info Befehls, der vom Benutzer gesendet wurde.
+    Handle the /info command sent by the user.
     """
-    logger.info(f"Behandle /info Befehl für chat_id: {chat_id}")
-    # Vorbereitung der Intervall-Informationen
+    logger.info(f"Handling /info command for chat_id: {chat_id}")
+    # Prepare interval information
     interval_info = (
-        f"🔔 *Guthabenänderungsschwellenwert:* `{BALANCE_CHANGE_THRESHOLD} sats`\n"
-        f"🔔 *Hervorhebungsschwellenwert:* `{HIGHLIGHT_THRESHOLD} sats`\n"
-        f"⏲️ *Intervall zur Überwachung der Guthabenänderung:* Alle `{WALLET_INFO_UPDATE_INTERVAL} Sekunden`\n"
-        f"📊 *Intervall für tägliche Wallet-Bilanzbenachrichtigungen:* Alle `{WALLET_BALANCE_NOTIFICATION_INTERVAL} Sekunden`\n"
-        f"🔄 *Intervall zum Abrufen der neuesten Zahlungen:* Alle `{PAYMENTS_FETCH_INTERVAL} Sekunden`"
+        f"🔔 *Balance Change Threshold:* `{BALANCE_CHANGE_THRESHOLD} sats`\n"
+        f"🔔 *Highlight Threshold:* `{HIGHLIGHT_THRESHOLD} sats`\n"
+        f"⏲️ *Balance Change Monitoring Interval:* Every `{WALLET_INFO_UPDATE_INTERVAL} seconds`\n"
+        f"📊 *Daily Wallet Balance Notification Interval:* Every `{WALLET_BALANCE_NOTIFICATION_INTERVAL} seconds`\n"
+        f"🔄 *Latest Payments Fetch Interval:* Every `{PAYMENTS_FETCH_INTERVAL} seconds`"
     )
 
     info_message = (
         f"ℹ️ *{INSTANCE_NAME}* - *Information*\n\n"
         f"{interval_info}\n\n"
-        f"🕒 *Zeitstempel:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Show Piggy Bank", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Show Transactions", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
         bot.send_message(chat_id=chat_id, text=info_message, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True, reply_markup=reply_markup)
     except Exception as telegram_error:
-        logger.error(f"Fehler beim Senden der /info Nachricht an Telegram: {telegram_error}")
+        logger.error(f"Error sending /info message to Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def handle_balance_command(chat_id):
     """
-    Behandeln des /balance Befehls, der vom Benutzer gesendet wurde.
+    Handle the /balance command sent by the user.
     """
-    logger.info(f"Behandle /balance Befehl für chat_id: {chat_id}")
+    logger.info(f"Handling /balance command for chat_id: {chat_id}")
     wallet_info = fetch_api("wallet")
     if wallet_info is None:
-        bot.send_message(chat_id=chat_id, text="Fehler beim Abrufen des Wallet-Guthabens.")
+        bot.send_message(chat_id=chat_id, text="Error fetching wallet balance.")
         return
 
     current_balance_msat = wallet_info.get("balance", 0)
-    current_balance_sats = current_balance_msat / 1000  # Umrechnung msats in sats
+    current_balance_sats = current_balance_msat / 1000  # Convert msats to sats
 
     message = (
-        f"📊 *{INSTANCE_NAME}* - *Wallet-Guthaben*\n\n"
-        f"🔹 *Aktuelles Guthaben:* `{int(current_balance_sats)} sats`\n\n"
-        f"🕒 *Zeitstempel:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        f"📊 *{INSTANCE_NAME}* - *Wallet Balance*\n\n"
+        f"🔹 *Current Balance:* `{int(current_balance_sats)} sats`\n\n"
+        f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Show Piggy Bank", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Show Transactions", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
         bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
     except Exception as telegram_error:
-        logger.error(f"Fehler beim Senden der /balance Nachricht an Telegram: {telegram_error}")
+        logger.error(f"Error sending /balance message to Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def handle_help_command(chat_id):
     """
-    Behandeln des /help Befehls, der vom Benutzer gesendet wurde.
+    Handle the /help command sent by the user.
     """
-    logger.info(f"Behandle /help Befehl für chat_id: {chat_id}")
+    logger.info(f"Handling /help command for chat_id: {chat_id}")
     help_message = (
-        f"ℹ️ *{INSTANCE_NAME}* - *Hilfe*\n\n"
-        f"Verfügbare Befehle:\n"
-        f"• `/balance` – Zeigt das aktuelle Wallet-Guthaben an.\n"
-        f"• `/transactions` – Zeigt die neuesten Transaktionen.\n"
-        f"• `/info` – Bietet Informationen über den Monitor und aktuelle Einstellungen.\n"
-        f"• `/help` – Zeigt diese Hilfenachricht an.\n\n"
-        f"🕒 *Zeitstempel:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        f"ℹ️ *{INSTANCE_NAME}* - *Help*\n\n"
+        f"Available Commands:\n"
+        f"• `/balance` – Shows the current wallet balance.\n"
+        f"• `/transactions` – Shows the latest transactions.\n"
+        f"• `/info` – Provides information about the monitor and current settings.\n"
+        f"• `/help` – Shows this help message.\n\n"
+        f"🕒 *Timestamp:* {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
     )
 
     keyboard = []
     if DONATIONS_URL:
-        keyboard.append([InlineKeyboardButton("🐽 Sparschwein Anzeigen", url=DONATIONS_URL)])
-    keyboard.append([InlineKeyboardButton("🧮 Transaktionen Anzeigen", callback_data='view_transactions')])
+        keyboard.append([InlineKeyboardButton("🐽 Show Piggy Bank", url=DONATIONS_URL)])
+    keyboard.append([InlineKeyboardButton("🧮 Show Transactions", callback_data='view_transactions')])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
         bot.send_message(chat_id=chat_id, text=help_message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
     except Exception as telegram_error:
-        logger.error(f"Fehler beim Senden der /help Nachricht an Telegram: {telegram_error}")
+        logger.error(f"Error sending /help message to Telegram: {telegram_error}")
         logger.debug(traceback.format_exc())
 
 def process_update(update):
     """
-    Verarbeiten von eingehenden Updates vom Telegram-Webhook.
+    Process incoming updates from the Telegram webhook.
     """
     try:
         if 'message' in update:
@@ -928,19 +929,19 @@ def process_update(update):
             else:
                 bot.send_message(
                     chat_id=chat_id,
-                    text="Unbekannter Befehl. Verfügbare Befehle: /balance, /transactions, /info, /help"
+                    text="Unknown command. Available commands: /balance, /transactions, /info, /help"
                 )
         elif 'callback_query' in update:
             process_callback_query(update['callback_query'])
         else:
-            logger.info("Update enthält keine Nachricht oder callback_query. Ignoriere.")
+            logger.info("Update contains no message or callback_query. Ignoring.")
     except Exception as e:
-        logger.error(f"Fehler beim Verarbeiten des Updates: {e}")
+        logger.error(f"Error processing update: {e}")
         logger.debug(traceback.format_exc())
 
 def process_callback_query(callback_query):
     """
-    Verarbeiten von Callback-Abfragen von Inline-Tastaturen in Telegram-Nachrichten.
+    Process callback queries from inline keyboards in Telegram messages.
     """
     try:
         query_id = callback_query['id']
@@ -949,16 +950,16 @@ def process_callback_query(callback_query):
 
         if data == 'view_transactions':
             handle_transactions_command(chat_id)
-            bot.answer_callback_query(callback_query_id=query_id, text="Transaktionen werden abgerufen...")
+            bot.answer_callback_query(callback_query_id=query_id, text="Fetching transactions...")
         else:
-            bot.answer_callback_query(callback_query_id=query_id, text="Unbekannte Aktion.")
+            bot.answer_callback_query(callback_query_id=query_id, text="Unknown action.")
     except Exception as e:
-        logger.error(f"Fehler beim Verarbeiten der Callback-Abfrage: {e}")
+        logger.error(f"Error processing callback query: {e}")
         logger.debug(traceback.format_exc())
 
 def start_scheduler():
     """
-    Starten des Schedulers für periodische Aufgaben mit BackgroundScheduler.
+    Start the scheduler for periodic tasks using BackgroundScheduler.
     """
     scheduler = BackgroundScheduler(timezone='UTC')
 
@@ -970,9 +971,9 @@ def start_scheduler():
             id='balance_check',
             next_run_time=datetime.utcnow() + timedelta(seconds=1)
         )
-        logger.info(f"Guthabenänderungsüberwachung alle {WALLET_INFO_UPDATE_INTERVAL} Sekunden geplant.")
+        logger.info(f"Balance change monitoring scheduled every {WALLET_INFO_UPDATE_INTERVAL} seconds.")
     else:
-        logger.info("Guthabenänderungsüberwachung ist deaktiviert (WALLET_INFO_UPDATE_INTERVAL auf 0 gesetzt).")
+        logger.info("Balance change monitoring is disabled (WALLET_INFO_UPDATE_INTERVAL set to 0).")
 
     if WALLET_BALANCE_NOTIFICATION_INTERVAL > 0:
         scheduler.add_job(
@@ -982,9 +983,9 @@ def start_scheduler():
             id='wallet_balance_notification',
             next_run_time=datetime.utcnow() + timedelta(seconds=1)
         )
-        logger.info(f"Tägliche Wallet-Bilanzbenachrichtigung alle {WALLET_BALANCE_NOTIFICATION_INTERVAL} Sekunden geplant.")
+        logger.info(f"Daily wallet balance notification scheduled every {WALLET_BALANCE_NOTIFICATION_INTERVAL} seconds.")
     else:
-        logger.info("Tägliche Wallet-Bilanzbenachrichtigung ist deaktiviert (WALLET_BALANCE_NOTIFICATION_INTERVAL auf 0 gesetzt).")
+        logger.info("Daily wallet balance notification is disabled (WALLET_BALANCE_NOTIFICATION_INTERVAL set to 0).")
 
     if PAYMENTS_FETCH_INTERVAL > 0:
         scheduler.add_job(
@@ -994,23 +995,23 @@ def start_scheduler():
             id='latest_payments_fetch',
             next_run_time=datetime.utcnow() + timedelta(seconds=1)
         )
-        logger.info(f"Neueste Zahlungen Abruf alle {PAYMENTS_FETCH_INTERVAL} Sekunden geplant.")
+        logger.info(f"Latest payments fetch scheduled every {PAYMENTS_FETCH_INTERVAL} seconds.")
     else:
-        logger.info("Abrufen der neuesten Zahlungen ist deaktiviert (PAYMENTS_FETCH_INTERVAL auf 0 gesetzt).")
+        logger.info("Fetching latest payments is disabled (PAYMENTS_FETCH_INTERVAL set to 0).")
 
     scheduler.start()
-    logger.info("Scheduler erfolgreich gestartet.")
+    logger.info("Scheduler successfully started.")
 
-# --------------------- Flask-Routen ---------------------
+# --------------------- Flask Routes ---------------------
 
 @app.route('/')
 def home():
-    return "🔍 LNbits Monitor läuft."
+    return "🔍 LNbits Monitor is running."
 
 @app.route('/status', methods=['GET'])
 def status():
     """
-    Gibt den Status der Anwendung zurück, einschließlich des neuesten Guthabens, Zahlungen, Gesamtspenden, Spenden, Lightning Address und LNURL.
+    Returns the status of the application, including the latest balance, payments, total donations, donations, Lightning Address, and LNURL.
     """
     donation_details = fetch_donation_details()
     return jsonify({
@@ -1020,70 +1021,70 @@ def status():
         "donations": donation_details["donations"],
         "lightning_address": donation_details["lightning_address"],
         "lnurl": donation_details["lnurl"],
-        "highlight_threshold": donation_details["highlight_threshold"]  # Schwellenwert einbeziehen
+        "highlight_threshold": donation_details["highlight_threshold"]  # Include threshold
     })
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = request.get_json()
     if not update:
-        logger.warning("Leeres Update erhalten.")
+        logger.warning("Received empty update.")
         return "No update found", 400
 
-    logger.debug(f"Update empfangen: {update}")
+    logger.debug(f"Received update: {update}")
 
-    # Verarbeiten der Nachricht in einem separaten Thread, um Blockierungen zu vermeiden
+    # Process the message in a separate thread to avoid blocking
     threading.Thread(target=process_update, args=(update,)).start()
 
     return "OK", 200
 
 @app.route('/donations')
 def donations_page():
-    # Abrufen der LNURLp-Informationen
+    # Fetch LNURLp information
     lnurlp_id = LNURLP_ID
     lnurlp_info = get_lnurlp_info(lnurlp_id)
     if lnurlp_info is None:
-        return "Fehler beim Abrufen der LNURLp-Informationen", 500
+        return "Error fetching LNURLp information", 500
 
-    # Extrahieren der notwendigen Informationen
-    wallet_name = lnurlp_info.get('description', 'Unbekanntes Wallet')
-    lightning_address = lnurlp_info.get('lightning_address', 'Unbekannte Lightning-Adresse')  # Anpassen des Schlüssels basierend auf Ihrer Datenstruktur
-    lnurl = lnurlp_info.get('lnurl', 'Nicht verfügbar')  # Anpassen des Schlüssels basierend auf Ihrer Datenstruktur
+    # Extract necessary information
+    wallet_name = lnurlp_info.get('description', 'Unknown Wallet')
+    lightning_address = lnurlp_info.get('lightning_address', 'Unknown Lightning Address')  # Adjust key based on your data structure
+    lnurl = lnurlp_info.get('lnurl', 'Not Available')  # Adjust key based on your data structure
 
-    # Generieren eines QR-Codes aus der LNURL
+    # Generate a QR code from the LNURL
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M)
     qr.add_data(lnurl)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
 
-    # Konvertieren des PIL-Bildes in einen Base64-String, um es in HTML einzubetten
+    # Convert the PIL image to a Base64 string to embed it in HTML
     img_io = io.BytesIO()
     img.save(img_io, 'PNG')
     img_io.seek(0)
     img_base64 = base64.b64encode(img_io.getvalue()).decode()
 
-    # Berechnen der Gesamtspenden für diese LNURLp
+    # Calculate the total donations for this LNURLp
     total_donations_current = sum(donation['amount'] for donation in donations)
 
-    # Übergeben der Spendenliste und zusätzlicher Details an die Vorlage zur Anzeige einzelner Transaktionen
+    # Pass the donations list and additional details to the template to display individual transactions
     return render_template(
         'donations.html',
         wallet_name=wallet_name,
         lightning_address=lightning_address,
         lnurl=lnurl,
         qr_code_data=img_base64,
-        donations_url=DONATIONS_URL,  # Übergeben der Spenden-URL an die Vorlage
-        information_url=INFORMATION_URL,  # Übergeben der Informations-URL an die Vorlage
-        total_donations=total_donations_current,  # Übergeben der Gesamtspenden
-        donations=donations,  # Übergeben der Spendenliste
-        highlight_threshold=HIGHLIGHT_THRESHOLD  # Übergeben des Hervorhebungsschwellenwerts
+        donations_url=DONATIONS_URL,  # Pass the donations URL to the template
+        information_url=INFORMATION_URL,  # Pass the information URL to the template
+        total_donations=total_donations_current,  # Pass the total donations
+        donations=donations,  # Pass the donations list
+        highlight_threshold=HIGHLIGHT_THRESHOLD  # Pass the highlight threshold
     )
 
-# API-Endpunkt zur Bereitstellung der Spenden-Daten
+# API endpoint to provide donation data
 @app.route('/api/donations', methods=['GET'])
 def get_donations_data():
     """
-    Stellt die Spenden-Daten als JSON für das Frontend bereit, einschließlich Lightning Address, LNURL und Hervorhebungsschwellenwert.
+    Provides the donations data as JSON for the frontend, including Lightning Address, LNURL, and highlight threshold.
     """
     try:
         donation_details = fetch_donation_details()
@@ -1092,44 +1093,44 @@ def get_donations_data():
             "donations": donation_details["donations"],
             "lightning_address": donation_details["lightning_address"],
             "lnurl": donation_details["lnurl"],
-            "highlight_threshold": donation_details["highlight_threshold"]  # Schwellenwert einbeziehen
+            "highlight_threshold": donation_details["highlight_threshold"]  # Include threshold
         }
-        logger.debug(f"Spenden-Daten mit Details serviert: {data}")
+        logger.debug(f"Served donations data with details: {data}")
         return jsonify(data), 200
     except Exception as e:
-        logger.error(f"Fehler beim Abrufen der Spenden-Daten: {e}")
+        logger.error(f"Error fetching donations data: {e}")
         logger.debug(traceback.format_exc())
-        return jsonify({"error": "Fehler beim Abrufen der Spenden-Daten"}), 500
+        return jsonify({"error": "Error fetching donations data"}), 500
 
-# Endpunkt für Long-Polling-Updates
+# Endpoint for long-polling updates
 @app.route('/donations_updates', methods=['GET'])
 def donations_updates():
     """
-    Endpunkt für Clients, um den Zeitstempel des letzten Spenden-Updates zu überprüfen.
+    Endpoint for clients to check the timestamp of the last donations update.
     """
     global last_update
     try:
         return jsonify({"last_update": last_update.isoformat()}), 200
     except Exception as e:
-        logger.error(f"Fehler beim Abrufen des letzten Updates: {e}")
+        logger.error(f"Error fetching last update: {e}")
         logger.debug(traceback.format_exc())
-        return jsonify({"error": "Fehler beim Abrufen des letzten Updates"}), 500
+        return jsonify({"error": "Error fetching last update"}), 500
 
-# --------------------- Anwendungseinstiegspunkt ---------------------
+# --------------------- Application Entry Point ---------------------
 
 if __name__ == "__main__":
-    logger.info("🚀 Starte Taschengeld Balance Monitor.")
+    logger.info("🚀 Starting Pocket Money Balance Monitor.")
 
-    # Protokollieren der aktuellen Konfiguration
-    logger.info(f"🔔 Benachrichtigungsschwellenwert: {BALANCE_CHANGE_THRESHOLD} sats")
-    logger.info(f"🔔 Hervorhebungsschwellenwert: {HIGHLIGHT_THRESHOLD} sats")
-    logger.info(f"📊 Abrufen der neuesten {LATEST_TRANSACTIONS_COUNT} Transaktionen für Benachrichtigungen")
-    logger.info(f"⏲️ Scheduler Intervalle - Guthabenänderungsüberwachung: {WALLET_INFO_UPDATE_INTERVAL} Sekunden, Tägliche Wallet-Bilanzbenachrichtigung: {WALLET_BALANCE_NOTIFICATION_INTERVAL} Sekunden, Abrufen der neuesten Zahlungen: {PAYMENTS_FETCH_INTERVAL} Sekunden")
+    # Log the current configuration
+    logger.info(f"🔔 Notification Threshold: {BALANCE_CHANGE_THRESHOLD} sats")
+    logger.info(f"🔔 Highlight Threshold: {HIGHLIGHT_THRESHOLD} sats")
+    logger.info(f"📊 Fetching the latest {LATEST_TRANSACTIONS_COUNT} transactions for notifications")
+    logger.info(f"⏲️ Scheduler Intervals - Balance Change Monitoring: {WALLET_INFO_UPDATE_INTERVAL} seconds, Daily Wallet Balance Notification: {WALLET_BALANCE_NOTIFICATION_INTERVAL} seconds, Latest Payments Fetch: {PAYMENTS_FETCH_INTERVAL} seconds")
 
-    # Starten des Schedulers in einem separaten Thread
+    # Start the scheduler in a separate thread
     scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)
     scheduler_thread.start()
 
-    # Starten der Flask-App
-    logger.info(f"Flask-Server läuft auf {APP_HOST}:{APP_PORT}")
+    # Start the Flask app
+    logger.info(f"Flask server running on {APP_HOST}:{APP_PORT}")
     app.run(host=APP_HOST, port=APP_PORT)
