@@ -1,5 +1,3 @@
-# taschengeld.py
-
 import os
 import logging
 from logging.handlers import RotatingFileHandler
@@ -149,6 +147,14 @@ def sanitize_memo(memo, forbidden_words):
     """
     if not memo:
         return "No Memo"
+    
+    # Log the type and value of memo for debugging
+    logger.debug(f"sanitize_memo called with memo type: {type(memo)} and value: {memo}")
+    
+    # Ensure memo is a string
+    if not isinstance(memo, str):
+        memo = str(memo)
+        logger.debug(f"Converted non-string memo to string: {memo}")
     
     # Function to replace the matched word with asterisks
     def replace_match(match):
@@ -523,9 +529,9 @@ def send_latest_payments():
             donations.append(donation)
             total_donations += donation_amount_sats
             last_update = datetime.utcnow()
-            # **Fixed Line:** Pass donation_memo instead of donation_amount_sats
+            # **Fixed Line:** Pass donation_memo as a string
             sanitized_memo = sanitize_memo(donation_memo, FORBIDDEN_WORDS)
-            logger.info(f"New donation detected: {donation_amount_sats} sats - {donation_memo}")
+            logger.info(f"New donation detected: {donation_amount_sats} sats - {sanitized_memo}")
             updateDonations({
                 "total_donations": total_donations,
                 "donations": donations
